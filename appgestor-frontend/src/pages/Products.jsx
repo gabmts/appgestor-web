@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
 import api from '../services/api';
 import Header from '../components/Header';
-import ProductModal from '../components/modals/ProductModal';
-import DeleteConfirmModal from '../components/modals/DeleteConfirmModal';
+
+// --- CORREÇÃO DOS IMPORTS (Nomes exatos dos arquivos) ---
+import EditProductModal from '../components/modals/EditProductModal';
+import DeleteProductModal from '../components/modals/DeleteProductModal';
 
 export default function Products({ user, onLogout }) {
   const [products, setProducts] = useState([]);
@@ -136,9 +138,9 @@ export default function Products({ user, onLogout }) {
         </section>
       </main>
 
-      {/* MODAIS */}
+      {/* MODAIS COM OS NOMES CORRETOS */}
       {isModalOpen && (
-        <ProductModal
+        <EditProductModal
           productToEdit={editingProduct}
           onClose={() => setIsModalOpen(false)}
           onSuccess={handleSaveSuccess}
@@ -146,7 +148,7 @@ export default function Products({ user, onLogout }) {
       )}
 
       {productToDelete && (
-        <DeleteConfirmModal
+        <DeleteProductModal
           product={productToDelete}
           onClose={() => setProductToDelete(null)}
           onDeleted={handleDeleteSuccess}
