@@ -28,25 +28,36 @@ export default function Stock({ user, onLogout }) {
     loadLowStock();
   }, []);
 
-  // Estilo base para os cabeçalhos (TH)
+  // Estilo base limpo para os cabeçalhos (sem quebras forçadas)
   const thStyle = {
-    paddingBottom: '8px',        // Reduzi um pouco para compensar a quebra de linha
+    paddingBottom: '12px',
     verticalAlign: 'bottom',
     color: 'var(--text-muted)',
-    fontSize: '10px',            // Reduzi 1px para caber melhor
-    fontWeight: 'bold',
+    fontSize: '12px', // Aumentei um pouco pois agora temos espaço
     textTransform: 'uppercase',
-    letterSpacing: '0.05em',     // Reduzi o espaçamento entre letras
-    lineHeight: '1.2'            // Permite que linhas fiquem próximas se quebrar
+    letterSpacing: '0.05em',
+    fontWeight: '600'
   };
 
   return (
     <div className="dashboard-container">
       <Header user={user} onLogout={onLogout} />
 
-      <main className="dashboard-main">
+      {/* A MÁGICA ESTÁ AQUI:
+         style={{ gridTemplateColumns: '1fr' }} 
+         Isso força o layout a ter apenas UMA coluna larga, 
+         fazendo o card ocupar a tela toda (igual ao Header).
+      */}
+      <main className="dashboard-main" style={{ gridTemplateColumns: '1fr' }}>
         <section className="card card-animated card-delay-1">
-          <h2>Estoque Crítico</h2>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+            <h2>Estoque Crítico</h2>
+            {!loading && !error && (
+              <span style={{ color: 'var(--text-soft)', fontSize: '13px' }}>
+                {items.length} {items.length === 1 ? 'item encontrado' : 'itens encontrados'}
+              </span>
+            )}
+          </div>
 
           {loading && <p className="info-msg">Carregando produtos...</p>}
           {error && <p className="error-msg">{error}</p>}
@@ -62,29 +73,26 @@ export default function Stock({ user, onLogout }) {
             <table className="products-table">
               <thead>
                 <tr>
-                  {/* Produto: 30% */}
-                  <th style={{ ...thStyle, width: '30%', textAlign: 'left' }}>
+                  {/* Agora com espaço de sobra, podemos distribuir melhor */}
+                  <th style={{ ...thStyle, width: '40%', textAlign: 'left' }}>
                     Produto
                   </th>
                   
-                  {/* Categoria: 15% */}
-                  <th style={{ ...thStyle, width: '15%', textAlign: 'left' }}>
+                  <th style={{ ...thStyle, width: '20%', textAlign: 'left' }}>
                     Categoria
                   </th>
                   
-                  {/* Atual: 15% - Centralizado e com quebra de linha forçada */}
+                  {/* Sem <br/>, tudo na mesma linha */}
                   <th style={{ ...thStyle, width: '15%', textAlign: 'center' }}>
-                    Estoque<br />Atual
+                    Estoque Atual
                   </th>
                   
-                  {/* Mínimo: 15% - Centralizado */}
-                  <th style={{ ...thStyle, width: '15%', textAlign: 'center' }}>
-                    Estoque<br />Mínimo
+                  <th style={{ ...thStyle, width: '10%', textAlign: 'center' }}>
+                    Mínimo
                   </th>
                   
-                  {/* Sugestão: 25% - Alinhado à direita */}
-                  <th style={{ ...thStyle, width: '25%', textAlign: 'right' }}>
-                    Sugestão<br />de Compra
+                  <th style={{ ...thStyle, width: '15%', textAlign: 'right' }}>
+                    Sugestão
                   </th>
                 </tr>
               </thead>
@@ -97,39 +105,50 @@ export default function Stock({ user, onLogout }) {
                   const suggested = diff > 0 ? diff + 5 : 0;
 
                   let statusLabel = 'OK';
-                  if (current <= min && current > 0) statusLabel = 'Baixo';
-                  if (current === 0) statusLabel = 'Zerado';
+                  let statusColor = 'var(--success)';
+                  
+                  if (current <= min && current > 0) {
+                    statusLabel = 'BAIXO';
+                    statusColor = 'var(--accent)';
+                  }
+                  if (current === 0) {
+                    statusLabel = 'ZERADO';
+                    statusColor = 'var(--danger)';
+                  }
 
                   return (
                     <tr key={p.id}>
-                      <td style={{ textAlign: 'left' }}>
+                      <td style={{ textAlign: 'left', fontWeight: '500' }}>
                         {p.name}
                       </td>
                       
-                      <td style={{ textAlign: 'left' }}>
+                      <td style={{ textAlign: 'left', color: 'var(--text-soft)' }}>
                         {p.category || '-'}
                       </td>
                       
-                      {/* Célula Estoque Atual */}
                       <td style={{ textAlign: 'center' }}>
-                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                          <strong style={{ fontSize: '14px', color: '#fff' }}>{current}</strong>
-                          <span style={{ fontSize: '9px', opacity: 0.7, marginTop: '2px', textTransform: 'uppercase' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                          <strong style={{ fontSize: '15px', color: '#fff' }}>{current}</strong>
+                          <span style={{ 
+                            fontSize: '9px', 
+                            border: `1px solid ${statusColor}`, 
+                            color: statusColor,
+                            padding: '1px 4px',
+                            borderRadius: '4px' 
+                          }}>
                             {statusLabel}
                           </span>
                         </div>
                       </td>
                       
-                      {/* Célula Mínimo */}
                       <td style={{ textAlign: 'center' }}>
-                        <strong style={{ color: 'var(--text-muted)' }}>{min}</strong>
+                        <span style={{ color: 'var(--text-muted)' }}>{min}</span>
                       </td>
                       
-                      {/* Célula Sugestão */}
                       <td style={{ textAlign: 'right' }}>
                         {suggested > 0 ? (
-                          <span style={{ color: 'var(--accent)' }}>
-                            + <strong>{suggested}</strong> un.
+                          <span style={{ color: 'var(--accent)', fontWeight: 'bold' }}>
+                            + {suggested} un.
                           </span>
                         ) : (
                           <span style={{ opacity: 0.3 }}>-</span>
