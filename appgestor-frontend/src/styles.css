@@ -49,7 +49,7 @@
 }
 
 /* ==========================================================
-   2. RESET BÁSICO & BODY
+   2. RESET BÁSICO & BODY (CORRIGIDO PARA MOBILE)
    ========================================================== */
 *,
 *::before,
@@ -58,9 +58,11 @@
 }
 
 html {
-  /* O SEGREDO DO FUNDO INFINITO: */
-  background-color: var(--bg-body); /* Pinta o fundo do navegador */
+  /* Fundo Infinito e Trava de Scroll Lateral */
+  background-color: var(--bg-body);
   height: 100%;
+  overflow-x: hidden; /* Impede que o HTML seja maior que a tela */
+  width: 100vw;
 }
 
 body {
@@ -68,7 +70,7 @@ body {
   /* Gradiente fixo que não repete e cobre tudo */
   background:
     radial-gradient(circle at top, var(--bg-gradient-top) 0%, var(--bg-gradient-mid) 45%, var(--bg-gradient-bottom) 100%);
-  background-attachment: fixed; /* Isso mantém o fundo parado ao rolar */
+  background-attachment: fixed;
   background-size: cover;
   
   color: var(--text-main);
@@ -76,9 +78,13 @@ body {
     Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   
-  /* Remove margens padrão */
   margin: 0;
   padding: 0;
+
+  /* Trava de Segurança para Body */
+  overflow-x: hidden;
+  width: 100%;
+  position: relative;
 }
 
 /* Scrollbar discreto */
@@ -382,8 +388,8 @@ button:disabled {
   box-shadow:
     0 0 30px rgba(164, 28, 67, 0.12),
     inset 0 0 10px rgba(255, 255, 255, 0.04);
-  -webkit-backdrop-filter: blur(22px) saturate(140%); /* Prefixo PRIMEIRO */
-  backdrop-filter: blur(22px) saturate(140%);         /* Padrão DEPOIS */
+  -webkit-backdrop-filter: blur(22px) saturate(140%);
+  backdrop-filter: blur(22px) saturate(140%);
 }
 
 /* Lado esquerdo do header (título + usuário) */
@@ -624,7 +630,7 @@ button:disabled {
   table-layout: fixed;
 }
 
-/* Correção Forçada para Tabela de Estoque */
+/* Cabeçalho da tabela */
 .products-table thead th {
   text-align: left;
   color: var(--text-muted);
@@ -633,17 +639,15 @@ button:disabled {
   text-transform: uppercase;
   letter-spacing: 0.08em;
   vertical-align: bottom;
-  
-  /* A BAZUCA DE ESPAÇAMENTO */
-  padding-bottom: 10px; /* Espaço interno */
-  border-bottom: 2px solid rgba(255, 255, 255, 0.1); /* Linha visível */
-  margin-bottom: 20px; /* Margem extra (só funciona se display não for table-cell padrão) */
-  height: 50px; /* Força uma altura mínima para o cabeçalho não esmagar */
+  padding-bottom: 10px;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+  margin-bottom: 20px;
+  height: 50px;
 }
 
-/* Espaçamento extra na primeira linha de dados para garantir */
+/* Espaçamento extra na primeira linha de dados */
 .products-table tbody tr:first-child td {
-  padding-top: 20px; /* Empurra a primeira linha de dados para baixo */
+  padding-top: 20px;
 }
 
 /* Cabeçalhos numéricos alinhados à direita */
@@ -655,8 +659,7 @@ button:disabled {
 }
 
 .products-table tbody tr {
-  transition: transform var(--transition-fast),
-    box-shadow var(--transition-fast);
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
 }
 
 .products-table tbody tr:hover td {
@@ -689,7 +692,7 @@ button:disabled {
   border-bottom-right-radius: 8px;
 }
 
-/* Colunas numéricas alinhadas e em negrito */
+/* Colunas numéricas */
 .products-table td:nth-child(3),
 .products-table td:nth-child(4),
 .products-table td:nth-child(5),
@@ -700,11 +703,11 @@ button:disabled {
   color: #ffffff;
 }
 
-/* Container para alinhar Editar / Excluir */
+/* Container para ações */
 .table-actions {
   display: flex;
   flex-direction: column;
-  align-items: center;   /* centraliza na célula */
+  align-items: center;
   justify-content: center;
   gap: 6px;
   width: 100%;
@@ -745,7 +748,7 @@ button:disabled {
   animation: fadeIn 0.2s ease-out;
 }
 
-/* Modal de edição / formulário */
+/* Modal de edição */
 .modal-content {
   background: #140610;
   border-radius: var(--radius-lg);
@@ -765,12 +768,10 @@ button:disabled {
   padding-bottom: 10px;
 }
 
-/* Form row dentro do modal mantém 2 colunas */
 .modal-content .form-row {
   margin-bottom: 0;
 }
 
-/* Ações do modal */
 .modal-actions {
   display: flex;
   gap: 12px;
@@ -781,7 +782,7 @@ button:disabled {
   flex: 1;
 }
 
-/* Modal de alerta (exclusão) */
+/* Modal de alerta */
 .alert-modal {
   background: #1b0813;
   border-radius: var(--radius-lg);
@@ -828,7 +829,7 @@ button:disabled {
 }
 
 /* ==========================================================
-   10. RESPONSIVIDADE ESPECÍFICA
+   10. RESPONSIVIDADE ESPECÍFICA (TABLETS & DESKTOP PEQUENO)
    ========================================================== */
 @media (max-width: 850px) {
   .dashboard-header {
@@ -836,7 +837,6 @@ button:disabled {
     align-items: flex-start;
     gap: 10px;
   }
-
   .btn-logout {
     align-self: flex-end;
   }
@@ -847,7 +847,6 @@ button:disabled {
     flex-direction: column;
     align-items: flex-start;
   }
-
   .dashboard-header button {
     align-self: stretch;
     justify-content: center;
@@ -870,7 +869,6 @@ button:disabled {
 /* ==========================================================
    LOGIN – GLASS + ANIMAÇÕES ESTILO APPLE
    ========================================================== */
-
 .login-page {
   position: relative;
   min-height: 100vh;
@@ -881,7 +879,6 @@ button:disabled {
   overflow: hidden;
 }
 
-/* Orbes coloridas de fundo (estilo macOS/iOS) */
 .login-orb {
   position: absolute;
   border-radius: 999px;
@@ -909,13 +906,11 @@ button:disabled {
   animation-delay: 3s;
 }
 
-/* Card de login com entrada suave */
 .login-card-animated {
   position: relative;
   animation: loginCardIn 0.6s ease-out forwards;
 }
 
-/* Cabeçalho do login com “pílula” de identidade */
 .login-header {
   margin-bottom: 22px;
   text-align: center;
@@ -962,7 +957,6 @@ button:disabled {
   color: var(--text-soft);
 }
 
-/* Pequeno efeito de foco nos inputs do login */
 .login-form input {
   transition: background 0.2s ease-out, border-color 0.2s ease-out, box-shadow 0.2s ease-out, transform 0.12s ease-out;
 }
@@ -971,88 +965,49 @@ button:disabled {
   transform: translateY(-1px);
 }
 
-/* Animações dos orbes / card */
 @keyframes orbFloat {
-  from {
-    transform: translate3d(0, 0, 0) scale(1);
-  }
-  to {
-    transform: translate3d(30px, -20px, 0) scale(1.05);
-  }
+  from { transform: translate3d(0, 0, 0) scale(1); }
+  to { transform: translate3d(30px, -20px, 0) scale(1.05); }
 }
 
 @keyframes loginCardIn {
-  from {
-    opacity: 0;
-    transform: translate3d(0, 20px, 0) scale(0.98);
-  }
-  to {
-    opacity: 1;
-    transform: translate3d(0, 0, 0) scale(1);
-  }
+  from { opacity: 0; transform: translate3d(0, 20px, 0) scale(0.98); }
+  to { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
 }
 
 /* ==========================================================
-   DASHBOARD – ANIMAÇÕES SUAVES ESTILO APPLE
+   DASHBOARD – ANIMAÇÕES SUAVES
    ========================================================== */
-
-/* Animação de entrada do grid do dashboard */
 .dashboard-main-animated {
   animation: dashboardFadeIn 0.45s ease-out;
 }
 
-/* Cards com leve slide + fade + scale */
 .card-animated {
   opacity: 0;
   transform: translate3d(0, 10px, 0) scale(0.99);
   animation: cardPopIn 0.5s ease-out forwards;
 }
 
-/* Pequenos delays para criar efeito de "stagger" */
-.card-delay-1 {
-  animation-delay: 0.05s;
-}
+.card-delay-1 { animation-delay: 0.05s; }
+.card-delay-2 { animation-delay: 0.12s; }
+.card-delay-3 { animation-delay: 0.2s; }
 
-.card-delay-2 {
-  animation-delay: 0.12s;
-}
-
-.card-delay-3 {
-  animation-delay: 0.2s;
-}
-
-/* Hover bem sutil */
 .card-animated:hover {
   transform: translate3d(0, -2px, 0) scale(1.01);
   box-shadow: 0 18px 45px rgba(0, 0, 0, 0.85);
 }
 
-/* Keyframes */
 @keyframes dashboardFadeIn {
-  from {
-    opacity: 0;
-    transform: translate3d(0, 8px, 0);
-  }
-  to {
-    opacity: 1;
-    transform: translate3d(0, 0, 0);
-  }
+  from { opacity: 0; transform: translate3d(0, 8px, 0); }
+  to { opacity: 1; transform: translate3d(0, 0, 0); }
 }
 
 @keyframes cardPopIn {
-  0% {
-    opacity: 0;
-    transform: translate3d(0, 16px, 0) scale(0.98);
-  }
-  60% {
-    opacity: 1;
-    transform: translate3d(0, 0, 0) scale(1.005);
-  }
-  100% {
-    opacity: 1;
-    transform: translate3d(0, 0, 0) scale(1);
-  }
+  0% { opacity: 0; transform: translate3d(0, 16px, 0) scale(0.98); }
+  60% { opacity: 1; transform: translate3d(0, 0, 0) scale(1.005); }
+  100% { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
 }
+
 /* ==========================================================
    12. OTIMIZAÇÕES MOBILE (TRANSFORMAÇÃO TABELA -> CARDS)
    ========================================================== */
@@ -1060,10 +1015,10 @@ button:disabled {
   
   /* Layout Geral */
   .dashboard-container {
-    padding: 16px 12px 90px; /* Mais espaço p/ scroll */
+    padding: 16px 12px 90px;
   }
 
-  /* Ajuste do Header */
+  /* Header */
   .dashboard-header {
     flex-direction: column;
     align-items: flex-start;
@@ -1116,29 +1071,29 @@ button:disabled {
     align-items: center;
     padding: 8px 0;
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-    text-align: right !important; /* Conteúdo à direita */
-    width: 100% !important; /* Garante largura total */
+    text-align: right !important; 
+    width: 100% !important;
   }
 
   .products-table td:last-child {
     border-bottom: none;
     padding-top: 16px;
-    justify-content: center; /* Botões centralizados */
+    justify-content: center;
   }
 
   /* 4. Usar o atributo 'data-label' para criar o título à esquerda */
   .products-table td::before {
-    content: attr(data-label); /* Pega o texto do HTML */
+    content: attr(data-label);
     font-weight: 600;
     text-transform: uppercase;
     font-size: 11px;
     color: var(--text-muted);
     letter-spacing: 0.05em;
     text-align: left;
-    margin-right: 20px; /* Distância do valor */
+    margin-right: 20px;
   }
 
-  /* Destaque para o Nome (Primeira célula) */
+  /* Destaque para o Nome */
   .products-table td:first-child {
     font-size: 16px;
     color: var(--accent);
@@ -1149,7 +1104,14 @@ button:disabled {
     margin-bottom: 8px;
   }
   .products-table td:first-child::before {
-    display: none; /* Não mostra label "Nome" */
+    display: none;
+  }
+
+  /* 5. FIX GHOST SCROLL - Ajuste para tabela não estourar */
+  div[style*="overflowX: auto"] {
+    margin: 0;
+    padding: 0;
+    width: 100%;
   }
 
   /* Botões full width */
@@ -1177,12 +1139,13 @@ button:disabled {
     margin: 0;
   }
 }
+
 /* ==========================================================
    13. RODAPÉ (FOOTER)
    ========================================================== */
 .app-footer {
   text-align: center;
-  padding: 40px 0 20px; /* Espaço em cima e embaixo */
+  padding: 40px 0 20px;
   color: var(--text-soft);
   font-size: 12px;
   border-top: 1px solid rgba(255, 255, 255, 0.05);

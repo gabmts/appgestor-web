@@ -21,7 +21,7 @@ export default function Header({ user, onLogout }) {
       <div className="header-left">
         <h1 className="header-title">
           <span className="header-title-dot" />
-          AppGestor – A Casa da Luna
+          AppGestor – A Casa da Luna 🍷
         </h1>
 
         {user && (
