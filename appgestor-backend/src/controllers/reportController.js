@@ -2,6 +2,16 @@
 
 const db = require('../config/db');
 
+// Helper para considerar horário de Brasília / Belém (UTC-3)
+function getBrazilTodayDateString() {
+  const nowUtc = new Date();               // horário UTC do servidor
+  const offsetMs = -3 * 60 * 60 * 1000;    // UTC-3
+  const brazilNow = new Date(nowUtc.getTime() + offsetMs);
+
+  // Retorna só a parte da data no formato YYYY-MM-DD
+  return brazilNow.toISOString().slice(0, 10);
+}
+
 module.exports = {
 
   // ---------------------------------------------------------------------------
@@ -94,7 +104,7 @@ module.exports = {
       let query = db('sales')
         .join('products', 'sales.product_id', 'products.id');
 
-      // filtro opcional por mês/ano
+      // filtro opcional por mês/ano (ajustando para UTC-3 no SQLite)
       if (month && year) {
         const m = parseInt(month, 10);
         const y = parseInt(year, 10);
@@ -103,9 +113,10 @@ module.exports = {
           const monthStr = String(m).padStart(2, '0');
           const yearStr = String(y);
 
-          // SQLite date formatting
+          // IMPORTANTE: usamos datetime(sales.created_at, "-3 hours")
+          // para que o mês/ano sejam calculados no fuso UTC-3
           query = query.whereRaw(
-            'strftime("%m", sales.created_at) = ? AND strftime("%Y", sales.created_at) = ?',
+            'strftime("%m", datetime(sales.created_at, "-3 hours")) = ? AND strftime("%Y", datetime(sales.created_at, "-3 hours")) = ?',
             [monthStr, yearStr]
           );
         }
