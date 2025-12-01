@@ -10,37 +10,28 @@ const BRAZIL_TZ = 'America/Belem';
 
 /**
  * Retorna a data "de hoje" no Brasil (UTC-3) no formato YYYY-MM-DD
- * Ex: "2025-11-30"
  */
 function getBrazilTodayDateString() {
   const now = new Date();
-
   const formatter = new Intl.DateTimeFormat('sv-SE', {
     timeZone: BRAZIL_TZ,
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',
   });
-
   const parts = formatter.formatToParts(now);
   const year = parts.find((p) => p.type === 'year').value;
   const month = parts.find((p) => p.type === 'month').value;
   const day = parts.find((p) => p.type === 'day').value;
-
   return `${year}-${month}-${day}`;
 }
 
 /**
- * Formata um Date/string qualquer para string já no horário do Brasil,
- * pronto para exibição no frontend.
- *
- * Exemplo de retorno: "30/11/2025 23:50:54"
+ * Formata um Date/string qualquer para string já no horário do Brasil
  */
 function formatDateTimeToBrazilString(dateValue) {
   if (!dateValue) return null;
-
   const d = new Date(dateValue);
-
   return d.toLocaleString('pt-BR', {
     timeZone: BRAZIL_TZ,
     day: '2-digit',
@@ -55,7 +46,6 @@ function formatDateTimeToBrazilString(dateValue) {
 module.exports = {
   // ---------------------------------------------------------------------------
   // TOP 3 PRODUTOS MAIS VENDIDOS
-  // GET /reports/top-products
   // ---------------------------------------------------------------------------
   async topProducts(req, res) {
     try {
@@ -81,7 +71,6 @@ module.exports = {
 
   // ---------------------------------------------------------------------------
   // ESTOQUE BAIXO / CRÍTICO
-  // GET /reports/low-stock
   // ---------------------------------------------------------------------------
   async lowStock(req, res) {
     try {
@@ -99,10 +88,6 @@ module.exports = {
 
   // ---------------------------------------------------------------------------
   // ÚLTIMAS VENDAS
-  // GET /reports/last-sales
-  //
-  // Aqui já devolvemos o horário convertido para o fuso do Brasil (Belém),
-  // para não aparecer venda “virando o dia/mês” no dashboard.
   // ---------------------------------------------------------------------------
   async lastSales(req, res) {
     try {
@@ -125,8 +110,8 @@ module.exports = {
         product: row.product,
         quantity: row.quantity,
         total_price: row.total_price,
-        created_at: row.created_at, // valor bruto do banco (UTC)
-        created_at_brazil: formatDateTimeToBrazilString(row.created_at), // valor já no horário do Brasil
+        created_at: row.created_at,
+        created_at_brazil: formatDateTimeToBrazilString(row.created_at),
       }));
 
       return res.json(sales);
@@ -137,16 +122,10 @@ module.exports = {
   },
 
   // ---------------------------------------------------------------------------
-  // RELATÓRIO FINANCEIRO (SOMENTE GESTOR)
-  // GET /reports/financial?month=11&year=2025
-  //
-  // IMPORTANTE: usamos datetime(sales.created_at, '-3 hours') no SQLite
-  // para aplicar os filtros de mês/ano considerando UTC-3 (Brasil).
-  // Assim, uma venda feita às 23h em Belém não cai no mês errado.
+  // RELATÓRIO FINANCEIRO (HÍBRIDO POSTGRES/SQLITE)
   // ---------------------------------------------------------------------------
   async financial(req, res) {
     try {
-      // Permissão mínima
       if (req.user.role !== 'GESTOR') {
         return res
           .status(403)
@@ -161,23 +140,37 @@ module.exports = {
         'products.id'
       );
 
-      // Filtro opcional por mês/ano (sempre no fuso do Brasil)
+      // --- FILTRO INTELIGENTE DE DATA (SQLITE vs POSTGRES) ---
       if (month && year) {
         const m = parseInt(month, 10);
         const y = parseInt(year, 10);
 
         if (!Number.isNaN(m) && !Number.isNaN(y)) {
-          const monthStr = String(m).padStart(2, '0');
-          const yearStr = String(y);
+          // Detecta qual banco estamos usando
+          const isPostgres = db.client.config.client === 'pg';
 
-          // Usamos datetime(..., '-3 hours') para "trazer" o created_at para UTC-3
-          query = query.whereRaw(
-            `
-              strftime("%m", datetime(sales.created_at, '-3 hours')) = ?
-              AND strftime("%Y", datetime(sales.created_at, '-3 hours')) = ?
-            `,
-            [monthStr, yearStr]
-          );
+          if (isPostgres) {
+            // Sintaxe PostgreSQL: (created_at AT TIME ZONE 'UTC' AT TIME ZONE 'America/Belem')
+            // Ajustamos o fuso para garantir que vendas do fim do dia caiam no dia certo no Brasil
+            query = query.whereRaw(
+              `EXTRACT(MONTH FROM sales.created_at AT TIME ZONE 'UTC' AT TIME ZONE 'America/Sao_Paulo') = ?`,
+              [m]
+            ).whereRaw(
+              `EXTRACT(YEAR FROM sales.created_at AT TIME ZONE 'UTC' AT TIME ZONE 'America/Sao_Paulo') = ?`,
+              [y]
+            );
+          } else {
+            // Sintaxe SQLite (Localhost): strftime com modificador -3 hours
+            const monthStr = String(m).padStart(2, '0');
+            const yearStr = String(y);
+            query = query.whereRaw(
+              `strftime("%m", datetime(sales.created_at, '-3 hours')) = ?`,
+              [monthStr]
+            ).whereRaw(
+              `strftime("%Y", datetime(sales.created_at, '-3 hours')) = ?`,
+              [yearStr]
+            );
+          }
         }
       }
 
