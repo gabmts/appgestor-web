@@ -36,22 +36,30 @@ module.exports = {
       // Define role padrão caso não venha
       const finalRole = role || 'ATENDENTE';
 
-      const [id] = await db('users').insert({
+      // ---------------------------------------------------------
+      // CORREÇÃO DE COMPATIBILIDADE (SQLite & PostgreSQL)
+      // ---------------------------------------------------------
+      
+      // 1. Inserimos o usuário (sem tentar pegar o ID do retorno direto)
+      await db('users').insert({
         name,
         email,
         password_hash,
         role: finalRole,
       });
 
+      // 2. Buscamos o usuário recém-criado pelo e-mail (que é único)
+      // Isso garante que teremos o ID correto em qualquer banco de dados.
+      const newUser = await db('users')
+        .where({ email })
+        .select('id', 'name', 'email', 'role')
+        .first();
+
       return res.status(201).json({
         message: 'Usuário criado com sucesso',
-        user: {
-          id,
-          name,
-          email,
-          role: finalRole,
-        },
+        user: newUser, // Retorna o objeto completo vindo do banco
       });
+
     } catch (error) {
       console.error('Erro em register:', error);
       return res

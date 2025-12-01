@@ -1,20 +1,35 @@
-# Node
+# --- Dependências (Pesado, nunca subir) ---
 node_modules/
 
-# Build frontend
+# --- Build de Produção (Gerado automaticamente no deploy) ---
 dist/
 build/
 
-# Logs
+# --- Logs e Debug ---
 *.log
 logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 
-# Ambiente
+# --- Variáveis de Ambiente (SEGURANÇA MÁXIMA) ---
+# Contém senhas e chaves secretas. Nunca remover daqui.
 .env
 .env.local
 .env.production
 .env.development
+.env.test
 
-# Sistema
+# --- Banco de Dados Local (CRÍTICO) ---
+# Impede que seu banco de teste suba para o GitHub
+*.sqlite
+*.sqlite3
+*.db
+
+# --- Arquivos de Sistema Operacional (Lixo gerado pelo Windows/Mac) ---
 .DS_Store
 Thumbs.db
+
+# --- Configurações de IDE (Opcional, mas boa prática) ---
+.vscode/
+.idea/
