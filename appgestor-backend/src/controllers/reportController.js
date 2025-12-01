@@ -2,18 +2,57 @@
 
 const db = require('../config/db');
 
-// Helper para considerar horário de Brasília / Belém (UTC-3)
-function getBrazilTodayDateString() {
-  const nowUtc = new Date();               // horário UTC do servidor
-  const offsetMs = -3 * 60 * 60 * 1000;    // UTC-3
-  const brazilNow = new Date(nowUtc.getTime() + offsetMs);
+/**
+ * Timezone oficial da Casa da Luna / Belém
+ * (usaremos sempre esse fuso para regras de negócio)
+ */
+const BRAZIL_TZ = 'America/Belem';
 
-  // Retorna só a parte da data no formato YYYY-MM-DD
-  return brazilNow.toISOString().slice(0, 10);
+/**
+ * Retorna a data "de hoje" no Brasil (UTC-3) no formato YYYY-MM-DD
+ * Ex: "2025-11-30"
+ */
+function getBrazilTodayDateString() {
+  const now = new Date();
+
+  const formatter = new Intl.DateTimeFormat('sv-SE', {
+    timeZone: BRAZIL_TZ,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  });
+
+  const parts = formatter.formatToParts(now);
+  const year = parts.find((p) => p.type === 'year').value;
+  const month = parts.find((p) => p.type === 'month').value;
+  const day = parts.find((p) => p.type === 'day').value;
+
+  return `${year}-${month}-${day}`;
+}
+
+/**
+ * Formata um Date/string qualquer para string já no horário do Brasil,
+ * pronto para exibição no frontend.
+ *
+ * Exemplo de retorno: "30/11/2025 23:50:54"
+ */
+function formatDateTimeToBrazilString(dateValue) {
+  if (!dateValue) return null;
+
+  const d = new Date(dateValue);
+
+  return d.toLocaleString('pt-BR', {
+    timeZone: BRAZIL_TZ,
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+  });
 }
 
 module.exports = {
-
   // ---------------------------------------------------------------------------
   // TOP 3 PRODUTOS MAIS VENDIDOS
   // GET /reports/top-products
@@ -34,7 +73,6 @@ module.exports = {
         .limit(3);
 
       return res.json(top);
-
     } catch (error) {
       console.error('Erro em topProducts:', error);
       return res.status(500).json({ error: 'Erro ao carregar Top 3 produtos' });
@@ -53,7 +91,6 @@ module.exports = {
         .orderBy('stock_current', 'asc');
 
       return res.json(items);
-
     } catch (error) {
       console.error('Erro em lowStock:', error);
       return res.status(500).json({ error: 'Erro ao listar estoque baixo' });
@@ -63,10 +100,13 @@ module.exports = {
   // ---------------------------------------------------------------------------
   // ÚLTIMAS VENDAS
   // GET /reports/last-sales
+  //
+  // Aqui já devolvemos o horário convertido para o fuso do Brasil (Belém),
+  // para não aparecer venda “virando o dia/mês” no dashboard.
   // ---------------------------------------------------------------------------
   async lastSales(req, res) {
     try {
-      const sales = await db('sales')
+      const rows = await db('sales')
         .join('products', 'sales.product_id', 'products.id')
         .select(
           'sales.id',
@@ -79,8 +119,17 @@ module.exports = {
         .orderBy('sales.created_at', 'desc')
         .limit(10);
 
-      return res.json(sales);
+      const sales = rows.map((row) => ({
+        id: row.id,
+        product_id: row.product_id,
+        product: row.product,
+        quantity: row.quantity,
+        total_price: row.total_price,
+        created_at: row.created_at, // valor bruto do banco (UTC)
+        created_at_brazil: formatDateTimeToBrazilString(row.created_at), // valor já no horário do Brasil
+      }));
 
+      return res.json(sales);
     } catch (error) {
       console.error('Erro em lastSales:', error);
       return res.status(500).json({ error: 'Erro ao listar últimas vendas' });
@@ -90,21 +139,29 @@ module.exports = {
   // ---------------------------------------------------------------------------
   // RELATÓRIO FINANCEIRO (SOMENTE GESTOR)
   // GET /reports/financial?month=11&year=2025
+  //
+  // IMPORTANTE: usamos datetime(sales.created_at, '-3 hours') no SQLite
+  // para aplicar os filtros de mês/ano considerando UTC-3 (Brasil).
+  // Assim, uma venda feita às 23h em Belém não cai no mês errado.
   // ---------------------------------------------------------------------------
   async financial(req, res) {
     try {
       // Permissão mínima
       if (req.user.role !== 'GESTOR') {
-        return res.status(403).json({ error: 'Apenas gestores podem ver o relatório financeiro' });
+        return res
+          .status(403)
+          .json({ error: 'Apenas gestores podem ver o relatório financeiro' });
       }
 
       const { month, year } = req.query;
 
-      // query base
-      let query = db('sales')
-        .join('products', 'sales.product_id', 'products.id');
+      let query = db('sales').join(
+        'products',
+        'sales.product_id',
+        'products.id'
+      );
 
-      // filtro opcional por mês/ano (ajustando para UTC-3 no SQLite)
+      // Filtro opcional por mês/ano (sempre no fuso do Brasil)
       if (month && year) {
         const m = parseInt(month, 10);
         const y = parseInt(year, 10);
@@ -113,10 +170,12 @@ module.exports = {
           const monthStr = String(m).padStart(2, '0');
           const yearStr = String(y);
 
-          // IMPORTANTE: usamos datetime(sales.created_at, "-3 hours")
-          // para que o mês/ano sejam calculados no fuso UTC-3
+          // Usamos datetime(..., '-3 hours') para "trazer" o created_at para UTC-3
           query = query.whereRaw(
-            'strftime("%m", datetime(sales.created_at, "-3 hours")) = ? AND strftime("%Y", datetime(sales.created_at, "-3 hours")) = ?',
+            `
+              strftime("%m", datetime(sales.created_at, '-3 hours')) = ?
+              AND strftime("%Y", datetime(sales.created_at, '-3 hours')) = ?
+            `,
             [monthStr, yearStr]
           );
         }
@@ -129,11 +188,12 @@ module.exports = {
           'products.category',
           db.raw('SUM(sales.quantity) AS total_quantity'),
           db.raw('SUM(sales.total_price) AS total_revenue'),
-          db.raw('SUM(sales.quantity * products.purchase_price) AS total_cost')
+          db.raw(
+            'SUM(sales.quantity * products.purchase_price) AS total_cost'
+          )
         )
         .groupBy('products.id', 'products.name', 'products.category');
 
-      // montar resultado com lucro e margem
       const result = rows.map((row) => {
         const revenue = Number(row.total_revenue || 0);
         const cost = Number(row.total_cost || 0);
@@ -152,7 +212,6 @@ module.exports = {
         };
       });
 
-      // totais gerais do relatório
       const totals = result.reduce(
         (acc, item) => {
           acc.total_revenue += item.total_revenue;
@@ -167,7 +226,6 @@ module.exports = {
         items: result,
         totals,
       });
-
     } catch (error) {
       console.error('Erro em financial:', error);
       return res.status(500).json({ error: 'Erro ao gerar relatório financeiro' });
