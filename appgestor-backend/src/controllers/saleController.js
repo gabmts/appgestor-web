@@ -1,17 +1,191 @@
 // src/controllers/saleController.js
-// Controlador de vendas — compatível com SQLite e com cálculo dinâmico de preços
+// Controlador de vendas — AGORA COM TRANSAÇÕES (ACID)
 
 const db = require('../config/db');
 
+// Funções utilitárias (mantidas)
+// ...
+
 /* ============================================================================
- * LISTAR VENDAS
- * GET /api/sales
- * Retorna:
- * - id, product_id
- * - nome do produto
- * - quantity
- * - unit_price (alias)
- * - total_value (alias)
+ * CRIAR VENDA (COM TRANSAÇÃO)
+ * ============================================================================ */
+async function createSale(req, res) {
+  const { product_id, quantity } = req.body;
+
+  if (!product_id || !quantity || Number(quantity) <= 0) {
+    return res.status(400).json({ error: 'Produto e quantidade são obrigatórios' });
+  }
+
+  try {
+    // 1) Inicia a Transação
+    const result = await db.transaction(async (trx) => {
+      
+      // 1.1) Buscar produto (usando trx)
+      const product = await trx('products')
+        .select('id', 'name', 'sale_price', 'stock_current')
+        .where({ id: product_id })
+        .first();
+
+      if (!product) {
+        throw new Error('Produto não encontrado');
+      }
+
+      const qty = Number(quantity);
+
+      // 1.2) Verificar estoque
+      if (Number(product.stock_current) < qty) {
+        throw new Error('Estoque insuficiente para registrar a venda');
+      }
+
+      // 1.3) Calcular preços
+      const unitPrice = Number(product.sale_price);
+      const totalPrice = unitPrice * qty;
+
+      // 1.4) Inserir venda (usando trx e retornando dados)
+      // Ajuste para compatibilidade Postgres (retornar a linha inserida)
+      const insertedSales = await trx('sales').insert({
+        product_id,
+        quantity: qty,
+        total_price: totalPrice,
+        created_at: db.fn.now(),
+      }).returning(['id', 'created_at']); // Retorna ID e data
+
+      const newSale = insertedSales[0];
+
+      // 1.5) Atualizar estoque (usando trx)
+      await trx('products')
+        .where({ id: product_id })
+        .update({
+          stock_current: Number(product.stock_current) - qty,
+          updated_at: db.fn.now(),
+        });
+      
+      // 1.6) Retornar resultado da transação
+      return {
+        id: newSale.id,
+        product_id,
+        product_name: product.name,
+        quantity: qty,
+        unit_price: unitPrice,
+        total_price: totalPrice,
+        created_at: newSale.created_at
+      };
+    });
+
+    return res.status(201).json({
+      message: 'Venda registrada com sucesso',
+      sale: result,
+    });
+  } catch (err) {
+    const status = err.message.includes('Estoque') || err.message.includes('Produto') ? 400 : 500;
+    console.error('Erro ao criar venda:', err.message);
+    return res.status(status).json({ error: err.message.includes('Estoque') ? err.message : 'Erro ao criar venda' });
+  }
+}
+
+/* ============================================================================
+ * ATUALIZAR VENDA (COM TRANSAÇÃO)
+ * ============================================================================ */
+async function updateSale(req, res) {
+  const { id } = req.params;
+  const { product_id, quantity } = req.body;
+
+  if (!product_id || !quantity || Number(quantity) <= 0) {
+    return res.status(400).json({ error: 'Produto e quantidade são obrigatórios' });
+  }
+
+  try {
+    const result = await db.transaction(async (trx) => {
+      // 1) Buscar venda antiga
+      const oldSale = await trx('sales').where({ id }).first();
+      if (!oldSale) throw new Error('Venda não encontrada');
+
+      // 2) Buscar produto atual (e novo, se for o caso)
+      const product = await trx('products')
+        .select('id', 'name', 'sale_price', 'stock_current')
+        .where({ id: product_id })
+        .first();
+      if (!product) throw new Error('Produto não encontrado');
+
+      const newQty = Number(quantity);
+      let stockChange = 0; // Quantidade líquida a ser retirada (negativo) ou devolvida (positivo)
+
+      if (oldSale.product_id !== Number(product_id)) {
+        // A) Produto mudou: devolve o antigo e retira o novo
+        await trx('products').where({ id: oldSale.product_id }).increment('stock_current', oldSale.quantity);
+        stockChange = -newQty;
+      } else {
+        // B) Mesmo produto: calcula a diferença
+        stockChange = oldSale.quantity - newQty; // Se positivo, devolve. Se negativo, retira.
+      }
+      
+      // 3) Checagem de estoque após devolver o antigo
+      if (stockChange < 0 && (Number(product.stock_current) + oldSale.quantity) < newQty) {
+          throw new Error('Estoque insuficiente para a nova quantidade.');
+      }
+
+      // 4) Atualiza o estoque (calculando o saldo líquido)
+      if (stockChange !== 0) {
+        await trx('products')
+          .where({ id: product_id })
+          .increment('stock_current', stockChange); // Knex lida com incremento/decremento automaticamente
+      }
+      
+      // 5) Atualizar venda
+      await trx('sales')
+        .where({ id })
+        .update({ product_id, quantity: newQty });
+
+      // 6) Retornar dados
+      const unitPrice = Number(product.sale_price);
+      const totalValue = unitPrice * newQty;
+      return { id: Number(id), product_id, product_name: product.name, quantity: newQty, unit_price: unitPrice, total_value: totalValue };
+    });
+
+    return res.json({ message: 'Venda atualizada com sucesso', sale: result });
+  } catch (err) {
+    const status = err.message.includes('Estoque') || err.message.includes('Produto') ? 400 : 500;
+    console.error('Erro ao atualizar venda:', err.message);
+    return res.status(status).json({ error: err.message.includes('Estoque') ? err.message : 'Erro ao atualizar venda' });
+  }
+}
+
+/* ============================================================================
+ * EXCLUIR VENDA (COM TRANSAÇÃO)
+ * ============================================================================ */
+async function deleteSale(req, res) {
+  const { id } = req.params;
+
+  try {
+    await db.transaction(async (trx) => {
+      // 1) Buscar venda antiga
+      const sale = await trx('sales').where({ id }).first();
+      if (!sale) throw new Error('Venda não encontrada');
+
+      // 2) Devolve estoque
+      await trx('products')
+        .where({ id: sale.product_id })
+        .increment('stock_current', sale.quantity);
+
+      // 3) Exclui venda
+      const deletedCount = await trx('sales').where({ id }).del();
+      
+      if (deletedCount === 0) {
+        throw new Error('Venda não encontrada para exclusão.');
+      }
+    });
+
+    return res.json({ message: 'Venda excluída com sucesso' });
+  } catch (err) {
+    console.error('Erro ao excluir venda:', err);
+    return res.status(400).json({ error: 'Erro ao excluir venda' });
+  }
+}
+
+// Funções não transacionais (mantidas)
+
+/* ============================================================================
+ * LISTAR VENDAS (NÃO REQUER TRANSAÇÃO)
  * ============================================================================ */
 async function listSales(req, res) {
   try {
@@ -24,7 +198,7 @@ async function listSales(req, res) {
         's.quantity',
         's.created_at',
         db.raw('p.sale_price AS unit_price'),
-        db.raw('(s.quantity * p.sale_price) AS total_value')
+        db.raw('(s.quantity * p.sale_price) AS total_price') // Corrigido para total_price para não quebrar o frontend
       )
       .orderBy('s.created_at', 'desc')
       .orderBy('s.id', 'desc');
@@ -36,231 +210,6 @@ async function listSales(req, res) {
   }
 }
 
-/* ============================================================================
- * CRIAR VENDA
- * POST /api/sales
- * body: { product_id, quantity }
- *
- * Regras:
- * - Calcula total_price usando o product.sale_price
- * - Atualiza estoque
- * - Gera total_price REAL na tabela
- * ============================================================================ */
-async function createSale(req, res) {
-  const { product_id, quantity } = req.body;
-
-  if (!product_id || !quantity || Number(quantity) <= 0) {
-    return res
-      .status(400)
-      .json({ error: 'Produto e quantidade são obrigatórios' });
-  }
-
-  try {
-    // 1) Buscar produto
-    const product = await db('products')
-      .select('id', 'name', 'sale_price', 'stock_current')
-      .where({ id: product_id })
-      .first();
-
-    if (!product) {
-      return res.status(404).json({ error: 'Produto não encontrado' });
-    }
-
-    const qty = Number(quantity);
-
-    // 2) Verificar estoque
-    if (Number(product.stock_current) < qty) {
-      return res.status(400).json({
-        error: 'Estoque insuficiente para registrar a venda',
-      });
-    }
-
-    // 3) Calcular preços
-    const unitPrice = Number(product.sale_price);
-    const totalPrice = unitPrice * qty;
-
-    // 4) Inserir venda
-    const insertIds = await db('sales').insert({
-      product_id,
-      quantity: qty,
-      total_price: totalPrice,
-      created_at: db.fn.now(),
-    });
-
-    const saleId = Array.isArray(insertIds) ? insertIds[0] : insertIds;
-
-    // 5) Atualizar estoque
-    await db('products')
-      .where({ id: product_id })
-      .update({
-        stock_current: Number(product.stock_current) - qty,
-        updated_at: db.fn.now(),
-      });
-
-    return res.status(201).json({
-      message: 'Venda registrada com sucesso',
-      sale: {
-        id: saleId,
-        product_id,
-        product_name: product.name,
-        quantity: qty,
-        unit_price: unitPrice,
-        total_price: totalPrice,
-      },
-    });
-  } catch (err) {
-    console.error('Erro ao criar venda:', err);
-    return res.status(500).json({ error: 'Erro ao criar venda' });
-  }
-}
-
-/* ============================================================================
- * ATUALIZAR VENDA
- * PUT /api/sales/:id
- * body: { product_id, quantity }
- *
- * Regras:
- * - devolve estoque da venda antiga
- * - debita estoque da nova configuração
- * - recalcula preço
- * ============================================================================ */
-async function updateSale(req, res) {
-  const { id } = req.params;
-  const { product_id, quantity } = req.body;
-
-  if (!product_id || !quantity || Number(quantity) <= 0) {
-    return res
-      .status(400)
-      .json({ error: 'Produto e quantidade são obrigatórios' });
-  }
-
-  try {
-    // 1) Buscar venda antiga
-    const oldSale = await db('sales').where({ id }).first();
-
-    if (!oldSale) {
-      return res.status(404).json({ error: 'Venda não encontrada' });
-    }
-
-    // 2) Buscar produto novo
-    const product = await db('products')
-      .select('id', 'name', 'sale_price', 'stock_current')
-      .where({ id: product_id })
-      .first();
-
-    if (!product) {
-      return res.status(404).json({ error: 'Produto não encontrado' });
-    }
-
-    const newQty = Number(quantity);
-
-    /* ===========================
-     * 3) Ajuste de estoque
-     * =========================== */
-    if (oldSale.product_id !== Number(product_id)) {
-      // devolve estoque ao produto antigo
-      await db('products')
-        .where({ id: oldSale.product_id })
-        .increment('stock_current', oldSale.quantity);
-
-      // verifica estoque do novo
-      if (Number(product.stock_current) < newQty) {
-        return res
-          .status(400)
-          .json({ error: 'Estoque insuficiente no novo produto' });
-      }
-
-      // debita estoque do novo produto
-      await db('products')
-        .where({ id: product_id })
-        .decrement('stock_current', newQty);
-    } else {
-      // mesmo produto, só muda quantidade
-      const diff = newQty - oldSale.quantity;
-
-      if (diff > 0) {
-        // precisa tirar mais estoque
-        if (Number(product.stock_current) < diff) {
-          return res.status(400).json({
-            error: 'Estoque insuficiente para aumentar a quantidade',
-          });
-        }
-
-        await db('products')
-          .where({ id: product_id })
-          .decrement('stock_current', diff);
-      } else if (diff < 0) {
-        // devolve ao estoque
-        await db('products')
-          .where({ id: product_id })
-          .increment('stock_current', Math.abs(diff));
-      }
-    }
-
-    /* ===========================
-     * 4) Atualizar venda
-     * =========================== */
-    await db('sales')
-      .where({ id })
-      .update({
-        product_id,
-        quantity: newQty,
-      });
-
-    const unitPrice = Number(product.sale_price);
-    const totalValue = unitPrice * newQty;
-
-    return res.json({
-      message: 'Venda atualizada com sucesso',
-      sale: {
-        id: Number(id),
-        product_id,
-        product_name: product.name,
-        quantity: newQty,
-        unit_price: unitPrice,
-        total_value: totalValue,
-      },
-    });
-  } catch (err) {
-    console.error('Erro ao atualizar venda:', err);
-    return res.status(500).json({ error: 'Erro ao atualizar venda' });
-  }
-}
-
-/* ============================================================================
- * EXCLUIR VENDA
- * DELETE /api/sales/:id
- * Regras:
- * - devolve estoque
- * - exclui venda
- * ============================================================================ */
-async function deleteSale(req, res) {
-  const { id } = req.params;
-
-  try {
-    const sale = await db('sales')
-      .select('product_id', 'quantity')
-      .where({ id })
-      .first();
-
-    if (!sale) {
-      return res.status(404).json({ error: 'Venda não encontrada' });
-    }
-
-    // devolve estoque
-    await db('products')
-      .where({ id: sale.product_id })
-      .increment('stock_current', sale.quantity);
-
-    // exclui venda
-    await db('sales').where({ id }).del();
-
-    return res.json({ message: 'Venda excluída com sucesso' });
-  } catch (err) {
-    console.error('Erro ao excluir venda:', err);
-    return res.status(500).json({ error: 'Erro ao excluir venda' });
-  }
-}
 
 module.exports = {
   listSales,
