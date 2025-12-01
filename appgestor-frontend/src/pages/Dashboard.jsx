@@ -1,8 +1,8 @@
-// src/pages/Dashboard.jsx
-
 import { useEffect, useState } from 'react';
 import api from '../services/api';
 import Header from '../components/Header';
+// 1. Importando o Rodapé
+import Footer from '../components/Footer';
 
 export default function Dashboard({ user, onLogout }) {
   const [topProducts, setTopProducts] = useState([]);
@@ -33,10 +33,9 @@ export default function Dashboard({ user, onLogout }) {
     <div className="dashboard-container">
       <Header user={user} onLogout={onLogout} />
 
-      {/* LAYOUT RESPONSIVO INTELIGENTE:
-         - repeat(auto-fit, minmax(300px, 1fr)): 
-           Se a tela for grande, cria colunas lado a lado.
-           Se for celular (< 600px), empilha tudo automaticamente.
+      {/* LAYOUT RESPONSIVO:
+          No PC: Cria colunas lado a lado.
+          No Celular: Empilha um card embaixo do outro.
       */}
       <main 
         className="dashboard-main dashboard-main-animated"
@@ -47,9 +46,7 @@ export default function Dashboard({ user, onLogout }) {
         }}
       >
         
-        {/* =============================================================== */}
-        {/* CARD 1: TOP 3 PRODUTOS                                          */}
-        {/* =============================================================== */}
+        {/* === CARD 1: TOP 3 PRODUTOS === */}
         <section className="card card-animated card-delay-1" style={{ minHeight: '320px' }}>
           <h2>🏆 Top 3 Mais Vendidos</h2>
 
@@ -60,7 +57,6 @@ export default function Dashboard({ user, onLogout }) {
           ) : (
             <ul style={{ padding: 0 }}>
               {topProducts.map((item, index) => {
-                // Emojis de medalha
                 const medals = ['🥇', '🥈', '🥉'];
                 const medal = medals[index] || `#${index + 1}`;
 
@@ -91,9 +87,7 @@ export default function Dashboard({ user, onLogout }) {
           )}
         </section>
 
-        {/* =============================================================== */}
-        {/* CARD 2: ESTOQUE BAIXO                                           */}
-        {/* =============================================================== */}
+        {/* === CARD 2: ESTOQUE BAIXO === */}
         <section className="card card-animated card-delay-2" style={{ minHeight: '320px' }}>
           <h2>📦 Atenção ao Estoque</h2>
 
@@ -141,13 +135,11 @@ export default function Dashboard({ user, onLogout }) {
           )}
         </section>
 
-        {/* =============================================================== */}
-        {/* CARD 3: FEED DE VENDAS (LARGURA TOTAL)                          */}
-        {/* =============================================================== */}
+        {/* === CARD 3: FEED DE VENDAS (LARGURA TOTAL) === */}
         <section 
           className="card card-animated card-delay-3" 
           style={{ 
-            gridColumn: '1 / -1', // Tenta ocupar tudo. No mobile (1 coluna), ocupa 1. No PC (2 colunas), ocupa 2.
+            gridColumn: '1 / -1', // Ocupa toda a largura disponível
             marginTop: '8px'
           }}
         >
@@ -158,7 +150,7 @@ export default function Dashboard({ user, onLogout }) {
               Nenhuma venda registrada hoje.
             </div>
           ) : (
-            // Wrapper com overflow-x auto garante que a tabela não quebre o layout no celular
+            // Wrapper com scroll horizontal para não quebrar no celular
             <div style={{ overflowX: 'auto', paddingBottom: '10px' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '10px', minWidth: '500px' }}>
                 <thead>
@@ -195,6 +187,10 @@ export default function Dashboard({ user, onLogout }) {
         </section>
 
       </main>
+
+      {/* 2. Rodapé inserido aqui no final */}
+      <Footer />
+      
     </div>
   );
 }

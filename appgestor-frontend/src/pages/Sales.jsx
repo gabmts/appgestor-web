@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import api from '../services/api';
 import Header from '../components/Header';
+import Footer from '../components/Footer'; // <--- IMPORT DO RODAPÉ
 import DeleteSaleModal from '../components/modals/DeleteSaleModal';
 
 export default function Sales({ user, onLogout }) {
@@ -134,9 +135,7 @@ export default function Sales({ user, onLogout }) {
       {/* ALTERAÇÃO: Forçamos 1 coluna para empilhar os cards verticalmente */}
       <main className="sales-main" style={{ gridTemplateColumns: '1fr' }}>
         
-        {/* ================================================================== */}
-        {/* CARD 1 – FORMULÁRIO DE VENDA (EM CIMA)                             */}
-        {/* ================================================================== */}
+        {/* CARD 1 – FORMULÁRIO DE VENDA */}
         <section className="card card-animated card-delay-1">
           <h2>{editingSaleId ? 'Editar Venda' : 'Registrar Nova Venda'}</h2>
 
@@ -191,9 +190,7 @@ export default function Sales({ user, onLogout }) {
           </form>
         </section>
 
-        {/* ================================================================== */}
-        {/* CARD 2 – LISTA DE ÚLTIMAS VENDAS (EMBAIXO)                         */}
-        {/* ================================================================== */}
+        {/* CARD 2 – LISTA DE ÚLTIMAS VENDAS */}
         <section className="card card-animated card-delay-2">
           <h2>Últimas Vendas</h2>
 
@@ -265,9 +262,7 @@ export default function Sales({ user, onLogout }) {
         </section>
       </main>
 
-      {/* ================================================================== */}
-      {/* MODAL DE EXCLUSÃO                                                  */}
-      {/* ================================================================== */}
+      {/* MODAL DE EXCLUSÃO */}
       {saleToDelete && (
         <DeleteSaleModal
           sale={saleToDelete}
@@ -275,6 +270,9 @@ export default function Sales({ user, onLogout }) {
           onDeleted={handleSaleDeleted}
         />
       )}
+
+      {/* RODAPÉ */}
+      <Footer />
     </div>
   );
 }

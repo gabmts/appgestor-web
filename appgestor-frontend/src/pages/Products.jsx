@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
 import api from '../services/api';
 import Header from '../components/Header';
+// 1. Import do Rodapé
+import Footer from '../components/Footer';
 
-// --- CORREÇÃO DOS IMPORTS (Nomes exatos dos arquivos) ---
+// Imports dos Modais (Nomes Corretos)
 import EditProductModal from '../components/modals/EditProductModal';
 import DeleteProductModal from '../components/modals/DeleteProductModal';
 
@@ -138,7 +140,7 @@ export default function Products({ user, onLogout }) {
         </section>
       </main>
 
-      {/* MODAIS COM OS NOMES CORRETOS */}
+      {/* MODAIS */}
       {isModalOpen && (
         <EditProductModal
           productToEdit={editingProduct}
@@ -154,6 +156,9 @@ export default function Products({ user, onLogout }) {
           onDeleted={handleDeleteSuccess}
         />
       )}
+
+      {/* 2. Componente Footer no final */}
+      <Footer />
     </div>
   );
 }

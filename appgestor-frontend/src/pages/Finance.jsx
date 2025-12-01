@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import api from '../services/api';
 import Header from '../components/Header';
+// 1. IMPORT DO FOOTER
+import Footer from '../components/Footer';
 
 export default function Financial({ user, onLogout }) {
   const [data, setData] = useState({ items: [], totals: {} });
@@ -44,13 +46,13 @@ export default function Financial({ user, onLogout }) {
             <p>Apenas gestores podem visualizar o financeiro.</p>
           </section>
         </main>
+        <Footer />
       </div>
     );
   }
 
   const { items, totals } = data;
 
-  // Meses para o select
   const months = [
     { value: '1', label: 'Janeiro' }, { value: '2', label: 'Fevereiro' },
     { value: '3', label: 'Março' }, { value: '4', label: 'Abril' },
@@ -123,7 +125,6 @@ export default function Financial({ user, onLogout }) {
           <section className="card card-animated card-delay-2">
             <h3>Detalhes por Produto</h3>
             
-            {/* WRAPPER MÁGICO PARA MOBILE */}
             <div style={{ overflowX: 'auto', marginTop: '10px' }}>
               <table className="products-table" style={{ minWidth: '700px' }}>
                 <thead>
@@ -168,6 +169,9 @@ export default function Financial({ user, onLogout }) {
           </section>
         )}
       </main>
+
+      {/* 2. ADICIONANDO O COMPONENTE AQUI */}
+      <Footer />
     </div>
   );
 }
