@@ -617,16 +617,26 @@ button:disabled {
   table-layout: fixed;
 }
 
+/* Correção Forçada para Tabela de Estoque */
 .products-table thead th {
   text-align: left;
   color: var(--text-muted);
   font-weight: 600;
-  /* AJUSTE: Aumentado padding-bottom de 6px para 16px para evitar sobreposição */
-  padding: 0 10px 16px;
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  vertical-align: bottom; /* Garante que o texto fique alinhado corretamente */
+  vertical-align: bottom;
+  
+  /* A BAZUCA DE ESPAÇAMENTO */
+  padding-bottom: 10px; /* Espaço interno */
+  border-bottom: 2px solid rgba(255, 255, 255, 0.1); /* Linha visível */
+  margin-bottom: 20px; /* Margem extra (só funciona se display não for table-cell padrão) */
+  height: 50px; /* Força uma altura mínima para o cabeçalho não esmagar */
+}
+
+/* Espaçamento extra na primeira linha de dados para garantir */
+.products-table tbody tr:first-child td {
+  padding-top: 20px; /* Empurra a primeira linha de dados para baixo */
 }
 
 /* Cabeçalhos numéricos alinhados à direita */
