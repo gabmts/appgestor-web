@@ -28,15 +28,16 @@ export default function Stock({ user, onLogout }) {
     loadLowStock();
   }, []);
 
-  // Estilo base para os cabeçalhos
+  // Estilo base para os cabeçalhos (TH)
   const thStyle = {
-    paddingBottom: '12px',
+    paddingBottom: '8px',        // Reduzi um pouco para compensar a quebra de linha
     verticalAlign: 'bottom',
     color: 'var(--text-muted)',
-    fontSize: '11px',
+    fontSize: '10px',            // Reduzi 1px para caber melhor
+    fontWeight: 'bold',
     textTransform: 'uppercase',
-    letterSpacing: '0.08em',
-    whiteSpace: 'nowrap' // Garante que não quebre linha e encavale
+    letterSpacing: '0.05em',     // Reduzi o espaçamento entre letras
+    lineHeight: '1.2'            // Permite que linhas fiquem próximas se quebrar
   };
 
   return (
@@ -61,29 +62,29 @@ export default function Stock({ user, onLogout }) {
             <table className="products-table">
               <thead>
                 <tr>
-                  {/* Produto: Alinhado à Esquerda, ocupa mais espaço */}
-                  <th style={{ ...thStyle, width: '35%', textAlign: 'left' }}>
+                  {/* Produto: 30% */}
+                  <th style={{ ...thStyle, width: '30%', textAlign: 'left' }}>
                     Produto
                   </th>
                   
-                  {/* Categoria: Alinhado à Esquerda */}
-                  <th style={{ ...thStyle, width: '20%', textAlign: 'left' }}>
+                  {/* Categoria: 15% */}
+                  <th style={{ ...thStyle, width: '15%', textAlign: 'left' }}>
                     Categoria
                   </th>
                   
-                  {/* Estoque Atual: Centralizado para ficar bonito */}
+                  {/* Atual: 15% - Centralizado e com quebra de linha forçada */}
                   <th style={{ ...thStyle, width: '15%', textAlign: 'center' }}>
-                    Atual
+                    Estoque<br />Atual
                   </th>
                   
-                  {/* Mínimo: Centralizado */}
-                  <th style={{ ...thStyle, width: '10%', textAlign: 'center' }}>
-                    Mínimo
+                  {/* Mínimo: 15% - Centralizado */}
+                  <th style={{ ...thStyle, width: '15%', textAlign: 'center' }}>
+                    Estoque<br />Mínimo
                   </th>
                   
-                  {/* Sugestão: Alinhado à Direita ou Centro */}
-                  <th style={{ ...thStyle, width: '20%', textAlign: 'right' }}>
-                    Sugestão
+                  {/* Sugestão: 25% - Alinhado à direita */}
+                  <th style={{ ...thStyle, width: '25%', textAlign: 'right' }}>
+                    Sugestão<br />de Compra
                   </th>
                 </tr>
               </thead>
@@ -109,26 +110,29 @@ export default function Stock({ user, onLogout }) {
                         {p.category || '-'}
                       </td>
                       
+                      {/* Célula Estoque Atual */}
                       <td style={{ textAlign: 'center' }}>
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                          <strong style={{ fontSize: '14px' }}>{current}</strong>
-                          <span style={{ fontSize: '10px', opacity: 0.7, marginTop: '2px' }}>
+                          <strong style={{ fontSize: '14px', color: '#fff' }}>{current}</strong>
+                          <span style={{ fontSize: '9px', opacity: 0.7, marginTop: '2px', textTransform: 'uppercase' }}>
                             {statusLabel}
                           </span>
                         </div>
                       </td>
                       
+                      {/* Célula Mínimo */}
                       <td style={{ textAlign: 'center' }}>
-                        <strong>{min}</strong>
+                        <strong style={{ color: 'var(--text-muted)' }}>{min}</strong>
                       </td>
                       
+                      {/* Célula Sugestão */}
                       <td style={{ textAlign: 'right' }}>
                         {suggested > 0 ? (
-                          <span>
-                            Comprar +<strong>{suggested}</strong>
+                          <span style={{ color: 'var(--accent)' }}>
+                            + <strong>{suggested}</strong> un.
                           </span>
                         ) : (
-                          <span>-</span>
+                          <span style={{ opacity: 0.3 }}>-</span>
                         )}
                       </td>
                     </tr>
