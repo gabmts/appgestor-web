@@ -12,7 +12,7 @@ import axios from 'axios';
  */
 
 const api = axios.create({
-  baseURL: "https://appgestor-backend.onrender.com", // backend da Render
+  baseURL: "https://appgestor-backend.onrender.com/api", // <- adicionamos /api aqui
 });
 
 /* ============================================================================
