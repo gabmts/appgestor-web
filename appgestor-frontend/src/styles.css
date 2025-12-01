@@ -375,8 +375,8 @@ button:disabled {
   box-shadow:
     0 0 30px rgba(164, 28, 67, 0.12),
     inset 0 0 10px rgba(255, 255, 255, 0.04);
-  backdrop-filter: blur(22px) saturate(140%);
-  -webkit-backdrop-filter: blur(22px) saturate(140%);
+  -webkit-backdrop-filter: blur(22px) saturate(140%); /* Prefixo PRIMEIRO */
+backdrop-filter: blur(22px) saturate(140%);         /* Padrão DEPOIS */
 }
 
 /* Lado esquerdo do header (título + usuário) */
