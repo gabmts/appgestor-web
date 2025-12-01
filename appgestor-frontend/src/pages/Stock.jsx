@@ -28,23 +28,6 @@ export default function Stock({ user, onLogout }) {
     loadLowStock();
   }, []);
 
-  // Caso deseje permitir apenas acesso de gestor, basta descomentar:
-  /*
-  if (user && user.role !== 'GESTOR') {
-    return (
-      <div className="dashboard-container">
-        <Header user={user} onLogout={onLogout} />
-        <main className="dashboard-main">
-          <section className="card card-animated card-delay-1">
-            <h2>Estoque Crítico</h2>
-            <p>Apenas gestores têm acesso a esta área.</p>
-          </section>
-        </main>
-      </div>
-    );
-  }
-  */
-
   return (
     <div className="dashboard-container">
       <Header user={user} onLogout={onLogout} />
@@ -72,11 +55,12 @@ export default function Stock({ user, onLogout }) {
             <table className="products-table">
               <thead>
                 <tr>
-                  <th>Produto</th>
-                  <th>Categoria</th>
-                  <th>Estoque atual</th>
-                  <th>Mínimo</th>
-                  <th>Sugestão</th>
+                  {/* AJUSTE VISUAL: Adicionei paddingBottom para separar o texto da linha */}
+                  <th style={{ paddingBottom: '16px', color: 'var(--text-muted)' }}>Produto</th>
+                  <th style={{ paddingBottom: '16px', color: 'var(--text-muted)' }}>Categoria</th>
+                  <th style={{ paddingBottom: '16px', color: 'var(--text-muted)' }}>Estoque atual</th>
+                  <th style={{ paddingBottom: '16px', color: 'var(--text-muted)' }}>Mínimo</th>
+                  <th style={{ paddingBottom: '16px', color: 'var(--text-muted)' }}>Sugestão</th>
                 </tr>
               </thead>
 

@@ -12,15 +12,15 @@
   --bg-card-soft: #1d0b17;
   --bg-card-strong: #24111c;
 
-  --primary: #a41c43;          /* Vinho principal */
+  --primary: #a41c43;         /* Vinho principal */
   --primary-dark: #6c0e29;
   --primary-hover: #c32554;
 
-  --accent: #f5c16c;           /* Dourado */
+  --accent: #f5c16c;          /* Dourado */
   --accent-soft: rgba(245, 193, 108, 0.4);
   --accent-hover: #ffcf87;
 
-  --text-main: #f7e9d8;        /* Creme claro */
+  --text-main: #f7e9d8;       /* Creme claro */
   --text-muted: #bba7a0;
   --text-soft: #947b73;
 
@@ -621,10 +621,12 @@ button:disabled {
   text-align: left;
   color: var(--text-muted);
   font-weight: 600;
-  padding: 0 10px 6px;
+  /* AJUSTE: Aumentado padding-bottom de 6px para 16px para evitar sobreposição */
+  padding: 0 10px 16px;
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.08em;
+  vertical-align: bottom; /* Garante que o texto fique alinhado corretamente */
 }
 
 /* Cabeçalhos numéricos alinhados à direita */
