@@ -1,3 +1,5 @@
+// src/pages/Stock.jsx
+
 import { useEffect, useState } from 'react';
 import api from '../services/api';
 import Header from '../components/Header';
@@ -26,6 +28,15 @@ export default function Stock({ user, onLogout }) {
     loadLowStock();
   }, []);
 
+  // Estilo forçado para garantir que o cabeçalho não quebre
+  const headerStyle = {
+    paddingBottom: '16px',       // Espaço embaixo do texto
+    verticalAlign: 'bottom',     // Alinha o texto na parte de baixo
+    whiteSpace: 'nowrap',        // PROIBIDO quebrar linha (resolve a sobreposição)
+    color: 'var(--text-muted)',  // Mantém a cor padrão
+    height: '50px'               // Altura mínima garantida
+  };
+
   return (
     <div className="dashboard-container">
       <Header user={user} onLogout={onLogout} />
@@ -48,11 +59,12 @@ export default function Stock({ user, onLogout }) {
             <table className="products-table">
               <thead>
                 <tr>
-                  <th>Produto</th>
-                  <th>Categoria</th>
-                  <th>Estoque atual</th>
-                  <th>Mínimo</th>
-                  <th>Sugestão</th>
+                  {/* Aplicando o estilo forçado em cada coluna */}
+                  <th style={headerStyle}>Produto</th>
+                  <th style={headerStyle}>Categoria</th>
+                  <th style={headerStyle}>Estoque atual</th>
+                  <th style={headerStyle}>Mínimo</th>
+                  <th style={headerStyle}>Sugestão</th>
                 </tr>
               </thead>
 
