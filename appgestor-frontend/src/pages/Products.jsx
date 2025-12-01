@@ -1,10 +1,7 @@
 import { useEffect, useState } from 'react';
 import api from '../services/api';
 import Header from '../components/Header';
-// 1. Import do Rodapé
 import Footer from '../components/Footer';
-
-// Imports dos Modais (Nomes Corretos)
 import EditProductModal from '../components/modals/EditProductModal';
 import DeleteProductModal from '../components/modals/DeleteProductModal';
 
@@ -13,7 +10,6 @@ export default function Products({ user, onLogout }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  // Modais
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const [productToDelete, setProductToDelete] = useState(null);
@@ -32,35 +28,14 @@ export default function Products({ user, onLogout }) {
     }
   }
 
-  useEffect(() => {
-    loadProducts();
-  }, []);
+  useEffect(() => { loadProducts(); }, []);
 
-  function handleNewProduct() {
-    setEditingProduct(null);
-    setIsModalOpen(true);
-  }
+  function handleNewProduct() { setEditingProduct(null); setIsModalOpen(true); }
+  function handleEditProduct(product) { setEditingProduct(product); setIsModalOpen(true); }
+  function handleDeleteClick(product) { setProductToDelete(product); }
+  async function handleSaveSuccess() { setIsModalOpen(false); await loadProducts(); }
+  async function handleDeleteSuccess() { setProductToDelete(null); await loadProducts(); }
 
-  function handleEditProduct(product) {
-    setEditingProduct(product);
-    setIsModalOpen(true);
-  }
-
-  function handleDeleteClick(product) {
-    setProductToDelete(product);
-  }
-
-  async function handleSaveSuccess() {
-    setIsModalOpen(false);
-    await loadProducts();
-  }
-
-  async function handleDeleteSuccess() {
-    setProductToDelete(null);
-    await loadProducts();
-  }
-
-  // Função auxiliar para emoji
   function getCategoryEmoji(category) {
     const cat = (category || '').toLowerCase();
     if (cat.includes('vinho')) return '🍷';
@@ -77,87 +52,59 @@ export default function Products({ user, onLogout }) {
         <section className="card card-animated card-delay-1">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
             <h2>🍷 Gerenciar Produtos</h2>
-            <button className="btn-primary" onClick={handleNewProduct}>
-              + Novo Produto
-            </button>
+            <button className="btn-primary" onClick={handleNewProduct}>+ Novo Produto</button>
           </div>
 
           {loading && <p className="info-msg">Carregando adega...</p>}
           {error && <p className="error-msg">{error}</p>}
-
-          {!loading && !error && products.length === 0 && (
-            <p>Nenhum produto cadastrado.</p>
-          )}
+          {!loading && !error && products.length === 0 && <p>Nenhum produto cadastrado.</p>}
 
           {!loading && !error && products.length > 0 && (
-            /* WRAPPER MÁGICO PARA MOBILE: overflowX: auto */
-            <div style={{ overflowX: 'auto', marginTop: '16px', paddingBottom: '10px' }}>
-              <table className="products-table" style={{ minWidth: '600px' }}>
-                <thead>
-                  <tr>
-                    <th style={{ textAlign: 'left', paddingLeft: '10px' }}>Nome</th>
-                    <th style={{ textAlign: 'left' }}>Categoria</th>
-                    <th style={{ textAlign: 'right' }}>Compra</th>
-                    <th style={{ textAlign: 'right' }}>Venda</th>
-                    <th style={{ textAlign: 'center' }}>Estoque</th>
-                    <th style={{ textAlign: 'center' }}>Ações</th>
+            // AQUI MUDOU: Removemos o div de scroll e deixamos a tabela livre para o CSS transformar
+            <table className="products-table">
+              <thead>
+                <tr>
+                  <th style={{textAlign: 'left'}}>Nome</th>
+                  <th style={{textAlign: 'left'}}>Categoria</th>
+                  <th style={{textAlign: 'right'}}>Compra</th>
+                  <th style={{textAlign: 'right'}}>Venda</th>
+                  <th style={{textAlign: 'center'}}>Estoque</th>
+                  <th style={{textAlign: 'center'}}>Ações</th>
+                </tr>
+              </thead>
+              <tbody>
+                {products.map((p) => (
+                  <tr key={p.id}>
+                    {/* data-label é usado pelo CSS no mobile */}
+                    <td data-label="Nome">{p.name}</td>
+                    <td data-label="Categoria">{getCategoryEmoji(p.category)} {p.category || '-'}</td>
+                    <td data-label="Preço Compra" style={{color: 'var(--text-muted)'}}>R$ {Number(p.purchase_price).toFixed(2)}</td>
+                    <td data-label="Preço Venda" style={{color: 'var(--accent)', fontWeight: 'bold'}}>R$ {Number(p.sale_price).toFixed(2)}</td>
+                    <td data-label="Estoque">
+                      <span style={{ 
+                        background: Number(p.stock_current) <= Number(p.stock_min) ? 'rgba(255, 75, 75, 0.2)' : 'rgba(255,255,255,0.05)',
+                        color: Number(p.stock_current) <= Number(p.stock_min) ? 'var(--danger)' : '#fff',
+                        padding: '2px 8px', borderRadius: '4px', fontSize: '12px'
+                      }}>
+                        {p.stock_current}
+                      </span>
+                    </td>
+                    <td data-label="Ações">
+                      <div className="table-actions">
+                        <button onClick={() => handleEditProduct(p)}>Editar</button>
+                        <button onClick={() => handleDeleteClick(p)}>Excluir</button>
+                      </div>
+                    </td>
                   </tr>
-                </thead>
-                <tbody>
-                  {products.map((p) => (
-                    <tr key={p.id}>
-                      <td style={{ paddingLeft: '10px', fontWeight: '500' }}>{p.name}</td>
-                      <td>
-                        {getCategoryEmoji(p.category)} {p.category || '-'}
-                      </td>
-                      <td style={{ textAlign: 'right', color: 'var(--text-muted)' }}>
-                        R$ {Number(p.purchase_price).toFixed(2)}
-                      </td>
-                      <td style={{ textAlign: 'right', color: 'var(--accent)', fontWeight: 'bold' }}>
-                        R$ {Number(p.sale_price).toFixed(2)}
-                      </td>
-                      <td style={{ textAlign: 'center' }}>
-                        <span style={{ 
-                          background: Number(p.stock_current) <= Number(p.stock_min) ? 'rgba(255, 75, 75, 0.2)' : 'rgba(255,255,255,0.05)',
-                          color: Number(p.stock_current) <= Number(p.stock_min) ? 'var(--danger)' : '#fff',
-                          padding: '2px 8px', borderRadius: '4px', fontSize: '12px'
-                        }}>
-                          {p.stock_current}
-                        </span>
-                      </td>
-                      <td>
-                        <div className="table-actions">
-                          <button onClick={() => handleEditProduct(p)}>Editar</button>
-                          <button onClick={() => handleDeleteClick(p)}>Excluir</button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                ))}
+              </tbody>
+            </table>
           )}
         </section>
       </main>
 
-      {/* MODAIS */}
-      {isModalOpen && (
-        <EditProductModal
-          productToEdit={editingProduct}
-          onClose={() => setIsModalOpen(false)}
-          onSuccess={handleSaveSuccess}
-        />
-      )}
-
-      {productToDelete && (
-        <DeleteProductModal
-          product={productToDelete}
-          onClose={() => setProductToDelete(null)}
-          onDeleted={handleDeleteSuccess}
-        />
-      )}
-
-      {/* 2. Componente Footer no final */}
+      {isModalOpen && <EditProductModal productToEdit={editingProduct} onClose={() => setIsModalOpen(false)} onSuccess={handleSaveSuccess} />}
+      {productToDelete && <DeleteProductModal product={productToDelete} onClose={() => setProductToDelete(null)} onDeleted={handleDeleteSuccess} />}
       <Footer />
     </div>
   );
