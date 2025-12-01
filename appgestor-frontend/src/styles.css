@@ -1046,3 +1046,87 @@ button:disabled {
     transform: translate3d(0, 0, 0) scale(1);
   }
 }
+/* ==========================================================
+   12. OTIMIZAÇÕES MOBILE (A MAGIA DA USABILIDADE)
+   ========================================================== */
+@media (max-width: 768px) {
+
+  /* 1. Aproveitar melhor a tela (menos bordas) */
+  .dashboard-container {
+    padding: 16px 12px 80px; /* Mais espaço embaixo para scroll */
+  }
+
+  /* 2. Menu de Navegação Deslizante (Estilo App) */
+  .dashboard-header {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 16px;
+    gap: 16px;
+  }
+
+  .nav-links {
+    width: 100%;
+    flex-wrap: nowrap;       /* Não deixa quebrar linha */
+    overflow-x: auto;        /* Permite rolar para o lado */
+    padding-bottom: 8px;     /* Espaço para o dedo não pegar na borda */
+    gap: 10px;
+    -webkit-overflow-scrolling: touch; /* Scroll suave no iPhone */
+    
+    /* Esconder a barra de rolagem feia, mas manter a função */
+    scrollbar-width: none; 
+  }
+  .nav-links::-webkit-scrollbar {
+    display: none;
+  }
+
+  .nav-links a {
+    white-space: nowrap;     /* Texto não quebra */
+    padding: 10px 20px;      /* Botão maior para o dedo acertar */
+    font-size: 14px;
+    background: rgba(255, 255, 255, 0.08); /* Fundo mais visível */
+  }
+
+  /* 3. Títulos menores para não comer espaço */
+  .card h2 {
+    font-size: 18px;
+  }
+
+  /* 4. Inputs e Botões maiores (Touch Friendly) */
+  input, select, button {
+    min-height: 48px; /* Altura mínima recomendada pela Apple/Google */
+    font-size: 16px;  /* Evita que o iPhone dê zoom automático ao digitar */
+  }
+
+  /* 5. Tabelas com Scroll Suave */
+  .products-table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Ajuste para a tabela não ficar colada nas bordas do card */
+  div[style*="overflowX: auto"] {
+    margin: 0 -10px; /* "Sangra" a tabela para as bordas */
+    padding: 0 10px;
+  }
+
+  /* 6. Modais ocupando a tela toda (Foco total) */
+  .modal-content, .alert-modal {
+    width: 95% !important;
+    max-height: 90vh;
+    overflow-y: auto;
+    padding: 20px;
+  }
+
+  /* Botões do modal um embaixo do outro (mais fácil clicar) */
+  .modal-actions, .alert-actions {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .modal-actions button, .alert-actions button {
+    width: 100%;
+    margin: 0;
+  }
+}
