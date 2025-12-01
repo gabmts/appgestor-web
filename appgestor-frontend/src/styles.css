@@ -1,0 +1,1036 @@
+/* ==========================================================
+   1. VARIÁVEIS & TEMA "A CASA DA LUNA" – DARK GOLD LUXO
+   ========================================================== */
+:root {
+  /* Paleta principal */
+  --bg-body: #050307;
+  --bg-gradient-top: #3a1625;
+  --bg-gradient-mid: #140710;
+  --bg-gradient-bottom: #050307;
+
+  --bg-card: #160812;
+  --bg-card-soft: #1d0b17;
+  --bg-card-strong: #24111c;
+
+  --primary: #a41c43;          /* Vinho principal */
+  --primary-dark: #6c0e29;
+  --primary-hover: #c32554;
+
+  --accent: #f5c16c;           /* Dourado */
+  --accent-soft: rgba(245, 193, 108, 0.4);
+  --accent-hover: #ffcf87;
+
+  --text-main: #f7e9d8;        /* Creme claro */
+  --text-muted: #bba7a0;
+  --text-soft: #947b73;
+
+  --danger: #ff4b4b;
+  --danger-dark: #d53030;
+  --success: #75d37c;
+  --info: #58a6ff;
+
+  /* Bordas & sombras */
+  --border-color: rgba(245, 193, 108, 0.18);
+  --border-soft: rgba(255, 255, 255, 0.06);
+
+  --shadow-card: 0 18px 50px rgba(0, 0, 0, 0.9);
+  --shadow-soft: 0 10px 30px rgba(0, 0, 0, 0.7);
+  --shadow-glow-red: 0 0 18px rgba(164, 28, 67, 0.55);
+
+  /* Raio & transição */
+  --radius-xs: 4px;
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-pill: 999px;
+
+  --transition-fast: 0.15s ease-out;
+  --transition: 0.25s ease-out;
+}
+
+/* ==========================================================
+   2. RESET BÁSICO & BODY
+   ========================================================== */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top, var(--bg-gradient-top) 0%, var(--bg-gradient-mid) 45%, var(--bg-gradient-bottom) 100%);
+  background-attachment: fixed;
+  color: var(--text-main);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Scrollbar discreto */
+body::-webkit-scrollbar {
+  width: 8px;
+}
+body::-webkit-scrollbar-track {
+  background: #050307;
+}
+body::-webkit-scrollbar-thumb {
+  background: #34101f;
+  border-radius: 999px;
+}
+body::-webkit-scrollbar-thumb:hover {
+  background: #4b182c;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+/* Container genérico usado no loading */
+.app-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-main);
+  font-size: 15px;
+}
+
+/* Mensagens globais */
+.error-msg {
+  margin: 8px 0 0;
+  font-size: 13px;
+  color: var(--danger);
+}
+
+.success-msg {
+  margin: 8px 0 0;
+  font-size: 13px;
+  color: var(--success);
+}
+
+.info-msg {
+  margin: 8px 0 0;
+  font-size: 13px;
+  color: var(--info);
+}
+
+.hint {
+  margin-top: 24px;
+  font-size: 13px;
+  color: var(--text-soft);
+}
+
+/* ==========================================================
+   3. FORMULÁRIOS & INPUTS
+   ========================================================== */
+label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: var(--text-muted);
+}
+
+input,
+select {
+  width: 100%;
+  padding: 11px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid #351424;
+  background-color: rgba(9, 3, 10, 0.85);
+  color: var(--text-main);
+  outline: none;
+  font-size: 14px;
+  transition: all var(--transition);
+}
+
+input::placeholder,
+select::placeholder {
+  color: rgba(187, 167, 160, 0.6);
+}
+
+input:focus,
+select:focus {
+  border-color: var(--accent);
+  background-color: #1a0712;
+  box-shadow: 0 0 0 2px rgba(245, 193, 108, 0.18);
+}
+
+/* Linha com dois campos lado a lado */
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+@media (max-width: 700px) {
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Forms principais */
+.product-form,
+.sales-form,
+.modal-form,
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* Botão de salvar do formulário de produtos mais elegante */
+.product-form button[type='submit'] {
+  align-self: flex-start;
+  min-width: 220px;
+  padding-inline: 28px;
+  margin-top: 10px;
+}
+
+/* ==========================================================
+   4. BOTÕES
+   ========================================================== */
+button {
+  cursor: pointer;
+  border: none;
+  font-family: inherit;
+  font-weight: 600;
+  transition: all var(--transition);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+/* Botão primário – vinho + glow */
+.btn-primary,
+.login-form button,
+.product-form button[type='submit'],
+.sales-form button,
+.modal-form button[type='submit'] {
+  padding: 13px 24px;
+  border-radius: var(--radius-pill);
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #fff;
+  text-transform: uppercase;
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  box-shadow: var(--shadow-glow-red);
+  margin-top: 4px;
+}
+
+.btn-primary:hover,
+.login-form button:hover,
+.product-form button[type='submit']:hover,
+.sales-form button:hover,
+.modal-form button[type='submit']:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.06);
+  box-shadow: 0 12px 30px rgba(164, 28, 67, 0.7);
+}
+
+.btn-primary:disabled,
+button:disabled {
+  opacity: 0.6;
+  cursor: default;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Botões de ação na tabela (Editar / Excluir) */
+.products-table button,
+.sales-main li button {
+  padding: 7px 14px;
+  font-size: 12px;
+  border-radius: var(--radius-pill);
+  font-weight: 600;
+}
+
+/* Editar: dourado */
+.products-table button:first-child,
+.sales-main li button:first-child {
+  background: var(--accent);
+  color: #2b1521;
+  box-shadow: 0 2px 10px rgba(245, 193, 108, 0.35);
+}
+
+.products-table button:first-child:hover,
+.sales-main li button:first-child:hover {
+  background: var(--accent-hover);
+  transform: translateY(-1px);
+}
+
+/* Excluir: vermelho */
+.products-table button:last-child,
+.sales-main li button:last-child {
+  background-color: rgba(255, 75, 75, 0.08);
+  color: var(--danger);
+  border: 1px solid rgba(255, 75, 75, 0.4);
+}
+
+.products-table button:last-child:hover,
+.sales-main li button:last-child:hover {
+  background-color: var(--danger);
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+/* Botão de perigo genérico */
+.btn-danger {
+  background: var(--danger);
+  color: #fff;
+  padding: 10px 22px;
+  border-radius: var(--radius-pill);
+  box-shadow: 0 4px 14px rgba(255, 75, 75, 0.4);
+}
+
+.btn-danger:hover {
+  background: var(--danger-dark);
+  transform: translateY(-1px);
+}
+
+/* Botão secundário / cancelar */
+.btn-secondary {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-main);
+  padding: 10px 22px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border-soft);
+}
+
+.btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+/* ==========================================================
+   5. TELA DE LOGIN (BASE)
+   ========================================================== */
+.login-container {
+  max-width: 380px;
+  margin: 10vh auto;
+  background: radial-gradient(circle at top, #2d111e 0%, #11040d 45%, #050307 100%);
+  padding: 42px 34px 34px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-card);
+  text-align: center;
+}
+
+.login-container h1 {
+  margin: 0 0 6px;
+  font-size: 26px;
+  color: var(--accent);
+  text-shadow: 0 0 18px rgba(245, 193, 108, 0.35);
+}
+
+.login-container h2 {
+  margin: 0 0 26px;
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--text-soft);
+}
+
+.login-form {
+  text-align: left;
+}
+
+.login-form label {
+  margin-bottom: 2px;
+}
+
+/* ==========================================================
+   6. LAYOUT GERAL – DASHBOARD
+   ========================================================== */
+.dashboard-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 32px 16px 40px; /* leve respiro extra em cima */
+}
+
+/* Header com efeito glass premium */
+.dashboard-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 26px;
+
+  padding: 16px 28px;
+  border-radius: 18px;
+
+  background: rgba(20, 8, 16, 0.55);
+  border: 1px solid rgba(245, 193, 108, 0.15);
+  box-shadow:
+    0 0 30px rgba(164, 28, 67, 0.12),
+    inset 0 0 10px rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(22px) saturate(140%);
+  -webkit-backdrop-filter: blur(22px) saturate(140%);
+}
+
+/* Lado esquerdo do header (título + usuário) */
+.header-left {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* Título do app */
+.header-title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-shadow: 0 0 10px rgba(245, 193, 108, 0.25);
+}
+
+/* Bolinha dourada */
+.header-title-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: radial-gradient(circle,
+    var(--accent) 0%,
+    rgba(245, 193, 108, 0.5) 45%,
+    rgba(0, 0, 0, 0.6) 100%);
+  box-shadow: 0 0 8px rgba(245, 193, 108, 0.8);
+}
+
+/* Linha “Logado como...” */
+.header-user {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-soft);
+}
+
+/* Badge de papel (GESTOR, etc.) */
+.header-role-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 6px;
+  padding: 2px 9px;
+  border-radius: 999px;
+  border: 1px solid rgba(245, 193, 108, 0.4);
+  background: rgba(245, 193, 108, 0.1);
+  color: var(--accent);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* Botão sair */
+.btn-logout {
+  padding: 7px 20px;
+  border-radius: var(--radius-pill);
+  background: rgba(255, 75, 75, 0.12);
+  color: var(--danger);
+  font-size: 12px;
+  border: 1px solid rgba(255, 75, 75, 0.5);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.btn-logout:hover {
+  background: var(--danger);
+  color: #fff;
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(255, 75, 75, 0.45);
+}
+
+/* Navegação */
+.nav-links {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.nav-links a {
+  padding: 8px 18px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-muted);
+  transition: 0.25s ease;
+}
+
+.nav-links a:hover {
+  background: rgba(245, 193, 108, 0.16);
+  color: #fff;
+  border-color: rgba(245, 193, 108, 0.25);
+}
+
+/* NavLink ativa (.active vem do react-router) */
+.nav-links a.active {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  box-shadow: 0 0 20px rgba(164, 28, 67, 0.45);
+}
+
+/* Layout principal de cards */
+.dashboard-main {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 22px;
+}
+
+@media (min-width: 900px) {
+  .dashboard-main {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    align-items: start;
+  }
+}
+
+/* Produtos / Vendas – dois cards lado a lado */
+.products-main,
+.sales-main {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 24px;
+  align-items: stretch;
+}
+
+@media (max-width: 900px) {
+  .products-main,
+  .sales-main {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Faz os cards internos ocuparem toda a altura do grid */
+.products-main .card,
+.sales-main .card {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Cards */
+.card {
+  position: relative;
+  overflow: visible; /* para glow e botões não cortarem */
+  background: radial-gradient(circle at top left, rgba(164, 28, 67, 0.16) 0%, #13050e 45%, #0b0408 100%);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-soft);
+  padding: 22px;
+  box-shadow: var(--shadow-soft);
+}
+
+/* Linha suave dourada */
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -40%;
+  width: 180%;
+  height: 3px;
+  background: radial-gradient(circle at center, var(--accent) 0%, transparent 60%);
+  opacity: 0.7;
+}
+
+/* “Glow” no canto */
+.card::after {
+  content: '';
+  position: absolute;
+  bottom: -60px;
+  right: -40px;
+  width: 160px;
+  height: 160px;
+  background: radial-gradient(circle, rgba(164, 28, 67, 0.4), transparent 70%);
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+.card h2 {
+  position: relative;
+  margin: 0 0 14px;
+  padding-bottom: 8px;
+  font-size: 17px;
+  color: var(--accent);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+/* Listas dentro dos cards (dashboard, financeiro…) */
+.card ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.card li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  font-size: 14px;
+}
+
+.card li:last-child {
+  border-bottom: none;
+}
+
+.card li span:first-child {
+  color: var(--text-main);
+  font-weight: 500;
+}
+
+.card li span:last-child {
+  font-size: 13px;
+  color: var(--text-soft);
+  text-align: right;
+}
+
+/* Texto default */
+.card p {
+  font-size: 14px;
+  color: var(--text-soft);
+}
+
+/* ==========================================================
+   7. TABELAS – PRODUTOS & ESTOQUE
+   ========================================================== */
+.products-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 8px;
+  font-size: 14px;
+  margin-top: 8px;
+  table-layout: fixed;
+}
+
+.products-table thead th {
+  text-align: left;
+  color: var(--text-muted);
+  font-weight: 600;
+  padding: 0 10px 6px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+/* Cabeçalhos numéricos alinhados à direita */
+.products-table th:nth-child(3),
+.products-table th:nth-child(4),
+.products-table th:nth-child(5),
+.products-table th:nth-child(6) {
+  text-align: right;
+}
+
+.products-table tbody tr {
+  transition: transform var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+.products-table tbody tr:hover td {
+  box-shadow: 0 0 0 1px rgba(245, 193, 108, 0.15);
+}
+
+.products-table td {
+  background: var(--bg-card-strong);
+  padding: 13px 10px;
+  color: var(--text-main);
+  vertical-align: middle;
+  border-top: 1px solid rgba(255, 255, 255, 0.03);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.products-table td:first-child {
+  border-top-left-radius: 8px;
+  border-bottom-left-radius: 8px;
+}
+
+/* Última coluna – AÇÕES */
+.products-table th:last-child,
+.products-table td:last-child {
+  text-align: center;
+  width: 120px;
+  min-width: 120px;
+  max-width: 120px;
+  padding: 10px 10px;
+  border-top-right-radius: 8px;
+  border-bottom-right-radius: 8px;
+}
+
+/* Colunas numéricas alinhadas e em negrito */
+.products-table td:nth-child(3),
+.products-table td:nth-child(4),
+.products-table td:nth-child(5),
+.products-table td:nth-child(6) {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+/* Container para alinhar Editar / Excluir */
+.table-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;   /* centraliza na célula */
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+}
+
+/* ==========================================================
+   8. LISTA DE VENDAS (Sales & Finance)
+   ========================================================== */
+.sales-main ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.sales-main li {
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  font-size: 14px;
+}
+
+.sales-main li:last-child {
+  border-bottom: none;
+}
+
+/* ==========================================================
+   9. MODAIS (EDITAR / EXCLUIR)
+   ========================================================== */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(circle at top, rgba(58, 18, 37, 0.9), rgba(5, 3, 7, 0.96));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  animation: fadeIn 0.2s ease-out;
+}
+
+/* Modal de edição / formulário */
+.modal-content {
+  background: #140610;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-color);
+  padding: 26px 24px 22px;
+  width: 90%;
+  max-width: 580px;
+  box-shadow: var(--shadow-card);
+  animation: slideUp 0.25s ease-out;
+}
+
+.modal-content h2 {
+  margin: 0 0 18px;
+  font-size: 18px;
+  color: var(--accent);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding-bottom: 10px;
+}
+
+/* Form row dentro do modal mantém 2 colunas */
+.modal-content .form-row {
+  margin-bottom: 0;
+}
+
+/* Ações do modal */
+.modal-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.modal-actions button {
+  flex: 1;
+}
+
+/* Modal de alerta (exclusão) */
+.alert-modal {
+  background: #1b0813;
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(255, 75, 75, 0.3);
+  padding: 28px 22px 22px;
+  width: 90%;
+  max-width: 400px;
+  text-align: center;
+  box-shadow: var(--shadow-card);
+  animation: slideUp 0.2s ease-out;
+}
+
+.alert-icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  margin: 0 auto 16px;
+  border: 2px solid var(--danger);
+  color: var(--danger);
+  background: radial-gradient(circle at center, rgba(255, 75, 75, 0.18), transparent 70%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+}
+
+.alert-title {
+  margin: 0 0 6px;
+  font-size: 19px;
+  color: #fff;
+}
+
+.alert-text {
+  margin: 0 0 18px;
+  font-size: 14px;
+  color: var(--text-soft);
+  line-height: 1.5;
+}
+
+.alert-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+/* ==========================================================
+   10. RESPONSIVIDADE ESPECÍFICA
+   ========================================================== */
+@media (max-width: 850px) {
+  .dashboard-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .btn-logout {
+    align-self: flex-end;
+  }
+}
+
+@media (max-width: 600px) {
+  .dashboard-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .dashboard-header button {
+    align-self: stretch;
+    justify-content: center;
+  }
+}
+
+/* ==========================================================
+   11. ANIMAÇÕES BÁSICAS
+   ========================================================== */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(18px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+/* ==========================================================
+   LOGIN – GLASS + ANIMAÇÕES ESTILO APPLE
+   ========================================================== */
+
+.login-page {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  overflow: hidden;
+}
+
+/* Orbes coloridas de fundo (estilo macOS/iOS) */
+.login-orb {
+  position: absolute;
+  border-radius: 999px;
+  filter: blur(40px);
+  opacity: 0.65;
+  pointer-events: none;
+  mix-blend-mode: screen;
+  animation: orbFloat 18s ease-in-out infinite alternate;
+}
+
+.login-orb-left {
+  width: 260px;
+  height: 260px;
+  background: radial-gradient(circle at 30% 30%, #f5c16c, transparent 65%);
+  top: -40px;
+  left: -40px;
+}
+
+.login-orb-right {
+  width: 320px;
+  height: 320px;
+  background: radial-gradient(circle at 20% 20%, #a41c43, transparent 65%);
+  bottom: -80px;
+  right: -40px;
+  animation-delay: 3s;
+}
+
+/* Card de login com entrada suave */
+.login-card-animated {
+  position: relative;
+  animation: loginCardIn 0.6s ease-out forwards;
+}
+
+/* Cabeçalho do login com “pílula” de identidade */
+.login-header {
+  margin-bottom: 22px;
+  text-align: center;
+}
+
+.login-logo-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(245, 193, 108, 0.25);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.6);
+  margin-bottom: 12px;
+}
+
+.login-logo-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #f5c16c, #ffcf87);
+  box-shadow: 0 0 10px rgba(245, 193, 108, 0.7);
+}
+
+.login-logo-text {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--text-soft);
+}
+
+.login-container h1 {
+  margin: 0 0 4px;
+  font-size: 26px;
+  color: var(--accent);
+  text-shadow: 0 0 18px rgba(245, 193, 108, 0.35);
+}
+
+.login-container h2 {
+  margin: 0 0 24px;
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--text-soft);
+}
+
+/* Pequeno efeito de foco nos inputs do login */
+.login-form input {
+  transition: background 0.2s ease-out, border-color 0.2s ease-out, box-shadow 0.2s ease-out, transform 0.12s ease-out;
+}
+
+.login-form input:focus {
+  transform: translateY(-1px);
+}
+
+/* Animações dos orbes / card */
+@keyframes orbFloat {
+  from {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  to {
+    transform: translate3d(30px, -20px, 0) scale(1.05);
+  }
+}
+
+@keyframes loginCardIn {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 20px, 0) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+/* ==========================================================
+   DASHBOARD – ANIMAÇÕES SUAVES ESTILO APPLE
+   ========================================================== */
+
+/* Animação de entrada do grid do dashboard */
+.dashboard-main-animated {
+  animation: dashboardFadeIn 0.45s ease-out;
+}
+
+/* Cards com leve slide + fade + scale */
+.card-animated {
+  opacity: 0;
+  transform: translate3d(0, 10px, 0) scale(0.99);
+  animation: cardPopIn 0.5s ease-out forwards;
+}
+
+/* Pequenos delays para criar efeito de "stagger" */
+.card-delay-1 {
+  animation-delay: 0.05s;
+}
+
+.card-delay-2 {
+  animation-delay: 0.12s;
+}
+
+.card-delay-3 {
+  animation-delay: 0.2s;
+}
+
+/* Hover bem sutil */
+.card-animated:hover {
+  transform: translate3d(0, -2px, 0) scale(1.01);
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.85);
+}
+
+/* Keyframes */
+@keyframes dashboardFadeIn {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 8px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes cardPopIn {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 16px, 0) scale(0.98);
+  }
+  60% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1.005);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
