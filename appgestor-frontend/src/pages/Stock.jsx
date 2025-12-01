@@ -28,14 +28,15 @@ export default function Stock({ user, onLogout }) {
     loadLowStock();
   }, []);
 
-  // Estilo específico para garantir que os títulos não se atropelme
+  // Estilo base para os cabeçalhos
   const thStyle = {
-    paddingBottom: '12px',       
-    verticalAlign: 'bottom',     
-    color: 'var(--text-muted)',  
+    paddingBottom: '12px',
+    verticalAlign: 'bottom',
+    color: 'var(--text-muted)',
     fontSize: '11px',
     textTransform: 'uppercase',
-    letterSpacing: '0.08em'
+    letterSpacing: '0.08em',
+    whiteSpace: 'nowrap' // Garante que não quebre linha e encavale
   };
 
   return (
@@ -60,20 +61,28 @@ export default function Stock({ user, onLogout }) {
             <table className="products-table">
               <thead>
                 <tr>
-                  {/* Definindo larguras para evitar colisão */}
-                  <th style={{ ...thStyle, width: '35%' }}>Produto</th>
-                  <th style={{ ...thStyle, width: '20%' }}>Categoria</th>
-                  
-                  {/* Forçando quebra de linha manual para ficar bonito */}
-                  <th style={{ ...thStyle, width: '15%', textAlign: 'right' }}>
-                    Estoque<br/>Atual
+                  {/* Produto: Alinhado à Esquerda, ocupa mais espaço */}
+                  <th style={{ ...thStyle, width: '35%', textAlign: 'left' }}>
+                    Produto
                   </th>
                   
-                  <th style={{ ...thStyle, width: '10%', textAlign: 'right' }}>
+                  {/* Categoria: Alinhado à Esquerda */}
+                  <th style={{ ...thStyle, width: '20%', textAlign: 'left' }}>
+                    Categoria
+                  </th>
+                  
+                  {/* Estoque Atual: Centralizado para ficar bonito */}
+                  <th style={{ ...thStyle, width: '15%', textAlign: 'center' }}>
+                    Atual
+                  </th>
+                  
+                  {/* Mínimo: Centralizado */}
+                  <th style={{ ...thStyle, width: '10%', textAlign: 'center' }}>
                     Mínimo
                   </th>
                   
-                  <th style={{ ...thStyle, width: '20%', textAlign: 'center' }}>
+                  {/* Sugestão: Alinhado à Direita ou Centro */}
+                  <th style={{ ...thStyle, width: '20%', textAlign: 'right' }}>
                     Sugestão
                   </th>
                 </tr>
@@ -92,20 +101,28 @@ export default function Stock({ user, onLogout }) {
 
                   return (
                     <tr key={p.id}>
-                      <td>{p.name}</td>
-                      <td>{p.category || '-'}</td>
-                      
-                      <td style={{ textAlign: 'right' }}>
-                        <strong>{current}</strong>{' '}
-                        <br/>
-                        <small style={{ opacity: 0.7, fontSize: '10px' }}>({statusLabel})</small>
+                      <td style={{ textAlign: 'left' }}>
+                        {p.name}
                       </td>
                       
-                      <td style={{ textAlign: 'right' }}>
-                        <strong>{min}</strong>
+                      <td style={{ textAlign: 'left' }}>
+                        {p.category || '-'}
                       </td>
                       
                       <td style={{ textAlign: 'center' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                          <strong style={{ fontSize: '14px' }}>{current}</strong>
+                          <span style={{ fontSize: '10px', opacity: 0.7, marginTop: '2px' }}>
+                            {statusLabel}
+                          </span>
+                        </div>
+                      </td>
+                      
+                      <td style={{ textAlign: 'center' }}>
+                        <strong>{min}</strong>
+                      </td>
+                      
+                      <td style={{ textAlign: 'right' }}>
                         {suggested > 0 ? (
                           <span>
                             Comprar +<strong>{suggested}</strong>
