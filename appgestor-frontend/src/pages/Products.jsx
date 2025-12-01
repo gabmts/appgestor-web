@@ -1,44 +1,30 @@
-// src/pages/Products.jsx
-
 import { useEffect, useState } from 'react';
 import api from '../services/api';
 import Header from '../components/Header';
-import EditProductModal from '../components/modals/EditProductModal';
-import DeleteProductModal from '../components/modals/DeleteProductModal';
+import ProductModal from '../components/modals/ProductModal';
+import DeleteConfirmModal from '../components/modals/DeleteConfirmModal';
 
 export default function Products({ user, onLogout }) {
   const [products, setProducts] = useState([]);
-
-  const [form, setForm] = useState({
-    name: '',
-    category: '',
-    purchase_price: '',
-    sale_price: '',
-    stock_current: '',
-    stock_min: '',
-  });
-
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
 
-  // --- estados para modal de edição ---
-  const [isEditOpen, setIsEditOpen] = useState(false);
-  const [productToEdit, setProductToEdit] = useState(null);
-
-  // --- estados para modal de exclusão ---
-  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  // Modais
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingProduct, setEditingProduct] = useState(null);
   const [productToDelete, setProductToDelete] = useState(null);
 
-  /* ============================================================================
-   * Carrega produtos da API
-   * ============================================================================ */
   async function loadProducts() {
     try {
+      setLoading(true);
       const res = await api.get('/products');
       setProducts(res.data || []);
+      setError('');
     } catch (err) {
-      console.error('Erro ao carregar produtos', err);
+      console.error(err);
+      setError('Erro ao carregar produtos.');
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -46,262 +32,124 @@ export default function Products({ user, onLogout }) {
     loadProducts();
   }, []);
 
-  /* ============================================================================
-   * Controle do formulário de cadastro
-   * ============================================================================ */
-  function handleChange(e) {
-    const { name, value } = e.target;
-    setForm((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+  function handleNewProduct() {
+    setEditingProduct(null);
+    setIsModalOpen(true);
   }
 
-  function resetForm() {
-    setForm({
-      name: '',
-      category: '',
-      purchase_price: '',
-      sale_price: '',
-      stock_current: '',
-      stock_min: '',
-    });
+  function handleEditProduct(product) {
+    setEditingProduct(product);
+    setIsModalOpen(true);
   }
 
-  /* ============================================================================
-   * Envio do formulário de cadastro (POST /products)
-   * ============================================================================ */
-  async function handleSubmit(e) {
-    e.preventDefault();
-    setError('');
-    setSuccess('');
-    setLoading(true);
-
-    try {
-      await api.post('/products', {
-        name: form.name,
-        category: form.category,
-        purchase_price: Number(form.purchase_price),
-        sale_price: Number(form.sale_price),
-        stock_current: Number(form.stock_current || 0),
-        stock_min: Number(form.stock_min || 0),
-      });
-
-      setSuccess('Produto cadastrado com sucesso!');
-      resetForm();
-      loadProducts();
-    } catch (err) {
-      console.error(err);
-      const msg =
-        err.response?.data?.error || 'Erro ao cadastrar produto. Verifique os dados.';
-      setError(msg);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  /* ============================================================================
-   * Ações de EDIÇÃO
-   * ============================================================================ */
-  function handleEditClick(product) {
-    setProductToEdit(product);
-    setIsEditOpen(true);
-  }
-
-  function handleCloseEditModal() {
-    setIsEditOpen(false);
-    setProductToEdit(null);
-  }
-
-  async function handleSavedFromEditModal() {
-    await loadProducts();
-  }
-
-  /* ============================================================================
-   * Ações de EXCLUSÃO
-   * ============================================================================ */
   function handleDeleteClick(product) {
     setProductToDelete(product);
-    setIsDeleteOpen(true);
   }
 
-  function handleCloseDeleteModal() {
-    setIsDeleteOpen(false);
-    setProductToDelete(null);
-  }
-
-  async function handleDeletedFromDeleteModal() {
+  async function handleSaveSuccess() {
+    setIsModalOpen(false);
     await loadProducts();
+  }
+
+  async function handleDeleteSuccess() {
+    setProductToDelete(null);
+    await loadProducts();
+  }
+
+  // Função auxiliar para emoji
+  function getCategoryEmoji(category) {
+    const cat = (category || '').toLowerCase();
+    if (cat.includes('vinho')) return '🍷';
+    if (cat.includes('espumante')) return '🍾';
+    if (cat.includes('uva')) return '🍇';
+    return '📦';
   }
 
   return (
     <div className="dashboard-container">
       <Header user={user} onLogout={onLogout} />
 
-      <main className="products-main">
-        {/* ================================================================== */}
-        {/* CARD 1 – FORMULÁRIO DE CADASTRO                                   */}
-        {/* ================================================================== */}
+      <main className="dashboard-main" style={{ gridTemplateColumns: '1fr' }}>
         <section className="card card-animated card-delay-1">
-          <h2>Cadastrar Produto</h2>
-
-          <form className="product-form" onSubmit={handleSubmit}>
-            <div className="form-row">
-              <label>
-                Nome
-                <input
-                  name="name"
-                  value={form.name}
-                  onChange={handleChange}
-                  required
-                />
-              </label>
-
-              <label>
-                Categoria
-                <input
-                  name="category"
-                  value={form.category}
-                  onChange={handleChange}
-                  placeholder="Vinho, Espumante, Prato..."
-                />
-              </label>
-            </div>
-
-            <div className="form-row">
-              <label>
-                Preço de compra (R$)
-                <input
-                  name="purchase_price"
-                  type="number"
-                  step="0.01"
-                  value={form.purchase_price}
-                  onChange={handleChange}
-                  required
-                />
-              </label>
-
-              <label>
-                Preço de venda (R$)
-                <input
-                  name="sale_price"
-                  type="number"
-                  step="0.01"
-                  value={form.sale_price}
-                  onChange={handleChange}
-                  required
-                />
-              </label>
-            </div>
-
-            <div className="form-row">
-              <label>
-                Estoque atual
-                <input
-                  name="stock_current"
-                  type="number"
-                  value={form.stock_current}
-                  onChange={handleChange}
-                />
-              </label>
-
-              <label>
-                Estoque mínimo
-                <input
-                  name="stock_min"
-                  type="number"
-                  value={form.stock_min}
-                  onChange={handleChange}
-                />
-              </label>
-            </div>
-
-            {error && <p className="error-msg">{error}</p>}
-            {success && <p className="success-msg">{success}</p>}
-
-            <button type="submit" disabled={loading}>
-              {loading ? 'Salvando...' : 'Salvar Produto'}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
+            <h2>🍷 Gerenciar Produtos</h2>
+            <button className="btn-primary" onClick={handleNewProduct}>
+              + Novo Produto
             </button>
-          </form>
-        </section>
+          </div>
 
-        {/* ================================================================== */}
-        {/* CARD 2 – TABELA DE PRODUTOS                                       */}
-        {/* ================================================================== */}
-        <section className="card card-animated card-delay-2">
-          <h2>Produtos Cadastrados</h2>
+          {loading && <p className="info-msg">Carregando adega...</p>}
+          {error && <p className="error-msg">{error}</p>}
 
-          {products.length === 0 ? (
-            <p>Nenhum produto cadastrado ainda.</p>
-          ) : (
-            <table className="products-table">
-              <thead>
-                <tr>
-                  <th>Nome</th>
-                  <th>Categoria</th>
-                  <th>Compra</th>
-                  <th>Venda</th>
-                  <th>Estoque</th>
-                  <th>Mínimo</th>
-                  <th>Ações</th>
-                </tr>
-              </thead>
-              <tbody>
-                {products.map((p) => (
-                  <tr key={p.id}>
-                    <td>{p.name}</td>
-                    <td>{p.category || '-'}</td>
-                    <td>
-                      <strong>R$ {Number(p.purchase_price).toFixed(2)}</strong>
-                    </td>
-                    <td>
-                      <strong>R$ {Number(p.sale_price).toFixed(2)}</strong>
-                    </td>
-                    <td>
-                      <strong>{p.stock_current}</strong>
-                    </td>
-                    <td>
-                      <strong>{p.stock_min}</strong>
-                    </td>
-                    <td>
-                      <div className="table-actions">
-                        <button
-                          type="button"
-                          onClick={() => handleEditClick(p)}
-                        >
-                          Editar
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteClick(p)}
-                        >
-                          Excluir
-                        </button>
-                      </div>
-                    </td>
+          {!loading && !error && products.length === 0 && (
+            <p>Nenhum produto cadastrado.</p>
+          )}
+
+          {!loading && !error && products.length > 0 && (
+            /* WRAPPER MÁGICO PARA MOBILE: overflowX: auto */
+            <div style={{ overflowX: 'auto', marginTop: '16px', paddingBottom: '10px' }}>
+              <table className="products-table" style={{ minWidth: '600px' }}>
+                <thead>
+                  <tr>
+                    <th style={{ textAlign: 'left', paddingLeft: '10px' }}>Nome</th>
+                    <th style={{ textAlign: 'left' }}>Categoria</th>
+                    <th style={{ textAlign: 'right' }}>Compra</th>
+                    <th style={{ textAlign: 'right' }}>Venda</th>
+                    <th style={{ textAlign: 'center' }}>Estoque</th>
+                    <th style={{ textAlign: 'center' }}>Ações</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {products.map((p) => (
+                    <tr key={p.id}>
+                      <td style={{ paddingLeft: '10px', fontWeight: '500' }}>{p.name}</td>
+                      <td>
+                        {getCategoryEmoji(p.category)} {p.category || '-'}
+                      </td>
+                      <td style={{ textAlign: 'right', color: 'var(--text-muted)' }}>
+                        R$ {Number(p.purchase_price).toFixed(2)}
+                      </td>
+                      <td style={{ textAlign: 'right', color: 'var(--accent)', fontWeight: 'bold' }}>
+                        R$ {Number(p.sale_price).toFixed(2)}
+                      </td>
+                      <td style={{ textAlign: 'center' }}>
+                        <span style={{ 
+                          background: Number(p.stock_current) <= Number(p.stock_min) ? 'rgba(255, 75, 75, 0.2)' : 'rgba(255,255,255,0.05)',
+                          color: Number(p.stock_current) <= Number(p.stock_min) ? 'var(--danger)' : '#fff',
+                          padding: '2px 8px', borderRadius: '4px', fontSize: '12px'
+                        }}>
+                          {p.stock_current}
+                        </span>
+                      </td>
+                      <td>
+                        <div className="table-actions">
+                          <button onClick={() => handleEditProduct(p)}>Editar</button>
+                          <button onClick={() => handleDeleteClick(p)}>Excluir</button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </section>
       </main>
 
-      {/* MODAL DE EDIÇÃO */}
-      {isEditOpen && productToEdit && (
-        <EditProductModal
-          product={productToEdit}
-          onClose={handleCloseEditModal}
-          onSaved={handleSavedFromEditModal}
+      {/* MODAIS */}
+      {isModalOpen && (
+        <ProductModal
+          productToEdit={editingProduct}
+          onClose={() => setIsModalOpen(false)}
+          onSuccess={handleSaveSuccess}
         />
       )}
 
-      {/* POPUP DE CONFIRMAÇÃO DE EXCLUSÃO */}
-      {isDeleteOpen && productToDelete && (
-        <DeleteProductModal
+      {productToDelete && (
+        <DeleteConfirmModal
           product={productToDelete}
-          onClose={handleCloseDeleteModal}
-          onDeleted={handleDeletedFromDeleteModal}
+          onClose={() => setProductToDelete(null)}
+          onDeleted={handleDeleteSuccess}
         />
       )}
     </div>

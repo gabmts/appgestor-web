@@ -9,13 +9,6 @@ export default function Dashboard({ user, onLogout }) {
   const [lowStock, setLowStock] = useState([]);
   const [lastSales, setLastSales] = useState([]);
 
-  /* ============================================================================
-   * Carregar dados do dashboard
-   *  - Top 3 produtos mais vendidos
-   *  - Produtos com estoque crítico
-   *  - Últimas vendas
-   * ============================================================================
-   */
   useEffect(() => {
     async function loadData() {
       try {
@@ -40,102 +33,167 @@ export default function Dashboard({ user, onLogout }) {
     <div className="dashboard-container">
       <Header user={user} onLogout={onLogout} />
 
-      <main className="dashboard-main dashboard-main-animated">
+      {/* LAYOUT RESPONSIVO INTELIGENTE:
+         - repeat(auto-fit, minmax(300px, 1fr)): 
+           Se a tela for grande, cria colunas lado a lado.
+           Se for celular (< 600px), empilha tudo automaticamente.
+      */}
+      <main 
+        className="dashboard-main dashboard-main-animated"
+        style={{ 
+          display: 'grid', 
+          gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', 
+          gap: '24px' 
+        }}
+      >
+        
         {/* =============================================================== */}
-        {/* TOP 3 PRODUTOS MAIS VENDIDOS                                    */}
+        {/* CARD 1: TOP 3 PRODUTOS                                          */}
         {/* =============================================================== */}
-        <section className="card card-animated card-delay-1">
-          <h2>Top 3 Produtos Mais Vendidos</h2>
+        <section className="card card-animated card-delay-1" style={{ minHeight: '320px' }}>
+          <h2>🏆 Top 3 Mais Vendidos</h2>
 
           {topProducts.length === 0 ? (
-            <p>Sem dados de vendas ainda.</p>
+            <div style={{ padding: '20px', textAlign: 'center', opacity: 0.6 }}>
+              😴 <br/>Sem vendas ainda.
+            </div>
           ) : (
-            <ul>
-              {topProducts.map((item) => (
-                <li key={item.id}>
-                  {/* Esquerda: nome + categoria */}
-                  <span>
-                    <strong>{item.name}</strong>
-                    {' — '}
-                    {item.category || 'Sem categoria'}
-                  </span>
+            <ul style={{ padding: 0 }}>
+              {topProducts.map((item, index) => {
+                // Emojis de medalha
+                const medals = ['🥇', '🥈', '🥉'];
+                const medal = medals[index] || `#${index + 1}`;
 
-                  {/* Direita: quantidade + faturamento */}
-                  <span>
-                    {item.total_quantity} un. —{' '}
-                    <strong>
-                      R$ {Number(item.total_revenue || 0).toFixed(2)}
-                    </strong>
-                  </span>
-                </li>
-              ))}
+                return (
+                  <li key={item.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <span style={{ fontSize: '20px' }}>{medal}</span>
+                      <div>
+                        <strong style={{ display: 'block', fontSize: '14px' }}>{item.name}</strong>
+                        <span style={{ fontSize: '11px', color: 'var(--text-soft)' }}>
+                          {item.category || 'Geral'}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div style={{ textAlign: 'right' }}>
+                      <span style={{ display: 'block', fontSize: '13px', fontWeight: 'bold' }}>
+                        {item.total_quantity} un.
+                      </span>
+                      <span style={{ fontSize: '11px', color: 'var(--accent)' }}>
+                        R$ {Number(item.total_revenue || 0).toFixed(2)}
+                      </span>
+                    </div>
+                  </li>
+                );
+              })}
             </ul>
           )}
         </section>
 
         {/* =============================================================== */}
-        {/* ESTOQUE BAIXO                                                   */}
+        {/* CARD 2: ESTOQUE BAIXO                                           */}
         {/* =============================================================== */}
-        <section className="card card-animated card-delay-2">
-          <h2>Estoque Baixo</h2>
+        <section className="card card-animated card-delay-2" style={{ minHeight: '320px' }}>
+          <h2>📦 Atenção ao Estoque</h2>
 
           {lowStock.length === 0 ? (
-            <p>Nenhum item com estoque crítico.</p>
+            <div style={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', opacity: 0.5 }}>
+              <span style={{ fontSize: '40px' }}>✅</span>
+              <p style={{ marginTop: '10px' }}>Estoque saudável!</p>
+            </div>
           ) : (
-            <ul>
-              {lowStock.map((item) => (
-                <li key={item.id}>
-                  {/* Esquerda: produto + categoria */}
-                  <span>
-                    <strong>{item.name}</strong>
-                    {item.category ? ` — ${item.category}` : ''}
-                  </span>
+            <ul style={{ padding: 0 }}>
+              {lowStock.map((item) => {
+                const current = Number(item.stock_current || 0);
+                const isZero = current === 0;
 
-                  {/* Direita: estoque atual / mínimo */}
-                  <span>
-                    Estoque:{' '}
-                    <strong>{Number(item.stock_current || 0)}</strong> / Mín:{' '}
-                    <strong>{Number(item.stock_min || 0)}</strong>
-                  </span>
-                </li>
-              ))}
+                return (
+                  <li key={item.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        {isZero && <span title="Zerado">🚨</span>}
+                        <strong style={{ color: isZero ? 'var(--danger)' : 'var(--text-main)', fontSize: '14px' }}>
+                          {item.name}
+                        </strong>
+                      </div>
+                      <span style={{ display: 'block', fontSize: '11px', color: 'var(--text-soft)' }}>
+                        Mínimo ideal: {Number(item.stock_min || 0)}
+                      </span>
+                    </div>
+
+                    <div style={{ textAlign: 'right' }}>
+                      <span style={{ 
+                        background: isZero ? 'var(--danger)' : 'rgba(245, 193, 108, 0.2)', 
+                        color: isZero ? '#fff' : 'var(--accent)', 
+                        padding: '4px 10px', 
+                        borderRadius: '12px', 
+                        fontSize: '11px', 
+                        fontWeight: 'bold' 
+                      }}>
+                        Restam {current}
+                      </span>
+                    </div>
+                  </li>
+                );
+              })}
             </ul>
           )}
         </section>
 
         {/* =============================================================== */}
-        {/* ÚLTIMAS VENDAS                                                  */}
+        {/* CARD 3: FEED DE VENDAS (LARGURA TOTAL)                          */}
         {/* =============================================================== */}
-        <section className="card card-animated card-delay-3">
-          <h2>Últimas Vendas</h2>
+        <section 
+          className="card card-animated card-delay-3" 
+          style={{ 
+            gridColumn: '1 / -1', // Tenta ocupar tudo. No mobile (1 coluna), ocupa 1. No PC (2 colunas), ocupa 2.
+            marginTop: '8px'
+          }}
+        >
+          <h2>🧾 Últimas Vendas Realizadas</h2>
 
           {lastSales.length === 0 ? (
-            <p>Nenhuma venda registrada ainda.</p>
+            <div style={{ padding: '20px', textAlign: 'center', opacity: 0.6 }}>
+              Nenhuma venda registrada hoje.
+            </div>
           ) : (
-            <ul>
-              {lastSales.map((sale) => (
-                <li key={sale.id}>
-                  {/* Esquerda: produto + quantidade */}
-                  <span>
-                    <strong>{sale.product || sale.product_name}</strong> —{' '}
-                    <strong>{sale.quantity} un.</strong>
-                  </span>
-
-                  {/* Direita: valor + data */}
-                  <span>
-                    <strong>
-                      R$ {Number(sale.total_price || 0).toFixed(2)}
-                    </strong>
-                    <br />
-                    <small>
-                      {new Date(sale.created_at).toLocaleString('pt-BR')}
-                    </small>
-                  </span>
-                </li>
-              ))}
-            </ul>
+            // Wrapper com overflow-x auto garante que a tabela não quebre o layout no celular
+            <div style={{ overflowX: 'auto', paddingBottom: '10px' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '10px', minWidth: '500px' }}>
+                <thead>
+                  <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+                    <th style={{ textAlign: 'left', padding: '10px', color: 'var(--text-muted)', fontSize: '11px', textTransform: 'uppercase' }}>PRODUTO</th>
+                    <th style={{ textAlign: 'center', padding: '10px', color: 'var(--text-muted)', fontSize: '11px', textTransform: 'uppercase' }}>QTD</th>
+                    <th style={{ textAlign: 'right', padding: '10px', color: 'var(--text-muted)', fontSize: '11px', textTransform: 'uppercase' }}>VALOR</th>
+                    <th style={{ textAlign: 'right', padding: '10px', color: 'var(--text-muted)', fontSize: '11px', textTransform: 'uppercase' }}>DATA/HORA</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {lastSales.map((sale) => (
+                    <tr key={sale.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                      <td style={{ padding: '12px 10px', fontWeight: '500' }}>
+                        {sale.product || sale.product_name}
+                      </td>
+                      <td style={{ textAlign: 'center', padding: '12px 10px' }}>
+                        <span style={{ background: 'rgba(255,255,255,0.05)', padding: '2px 8px', borderRadius: '4px', fontSize: '12px' }}>
+                          {sale.quantity}
+                        </span>
+                      </td>
+                      <td style={{ textAlign: 'right', padding: '12px 10px', fontWeight: 'bold', color: 'var(--accent)' }}>
+                        R$ {Number(sale.total_price || 0).toFixed(2)}
+                      </td>
+                      <td style={{ textAlign: 'right', padding: '12px 10px', fontSize: '11px', color: 'var(--text-soft)' }}>
+                        {new Date(sale.created_at).toLocaleString('pt-BR')}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </section>
+
       </main>
     </div>
   );

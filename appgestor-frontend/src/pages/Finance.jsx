@@ -1,254 +1,172 @@
-// src/pages/Finance.jsx
-
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import api from '../services/api';
 import Header from '../components/Header';
 
-export default function Finance({ user, onLogout }) {
-  const [sales, setSales] = useState([]);
-  const [financeData, setFinanceData] = useState(null);
+export default function Financial({ user, onLogout }) {
+  const [data, setData] = useState({ items: [], totals: {} });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  // Mês atual no formato YYYY-MM (para <input type="month">)
-  const now = new Date();
-  const defaultMonth = `${now.getFullYear()}-${String(
-    now.getMonth() + 1
-  ).padStart(2, '0')}`;
+  // Filtros de Mês/Ano
+  const today = new Date();
+  const [month, setMonth] = useState(String(today.getMonth() + 1));
+  const [year, setYear] = useState(String(today.getFullYear()));
 
-  const [selectedMonth, setSelectedMonth] = useState(defaultMonth);
-
-  /* ============================================================================
-   * Carregar dados financeiros e últimas vendas, com filtro de mês/ano
-   * ============================================================================ */
   useEffect(() => {
-    async function loadData() {
+    async function loadFinancial() {
       try {
         setLoading(true);
         setError('');
-
-        const [yearStr, monthStr] = selectedMonth.split('-') || [];
-        const year = yearStr;
-        const month = monthStr;
-
-        const [finRes, salesRes] = await Promise.all([
-          api.get('/reports/financial', {
-            params: { month, year },
-          }),
-          api.get('/reports/last-sales', {
-            params: { limit: 500 },
-          }),
-        ]);
-
-        setFinanceData(finRes.data || null);
-        setSales(salesRes.data || []);
+        const res = await api.get(`/reports/financial`, {
+          params: { month, year },
+        });
+        setData(res.data);
       } catch (err) {
-        console.error('Erro ao carregar dados financeiros:', err);
+        console.error(err);
         setError('Erro ao carregar dados financeiros.');
       } finally {
         setLoading(false);
       }
     }
 
-    loadData();
-  }, [selectedMonth]);
-
-  /* ============================================================================
-   * Função auxiliar: converte data em YYYY-MM para comparar com selectedMonth
-   * ============================================================================ */
-  function getMonthKey(dateStr) {
-    const d = new Date(dateStr);
-    if (Number.isNaN(d.getTime())) return '';
-    const y = d.getFullYear();
-    const m = String(d.getMonth() + 1).padStart(2, '0');
-    return `${y}-${m}`;
-  }
-
-  /* ============================================================================
-   * Vendas do mês selecionado (filtradas no front, compatível com last-sales)
-   * ============================================================================ */
-  const salesOfMonth = useMemo(
-    () => sales.filter((s) => getMonthKey(s.created_at) === selectedMonth),
-    [sales, selectedMonth]
-  );
-
-  /* ============================================================================
-   * Cálculos financeiros:
-   * usa agregados do backend (totals) + detalhes de vendas do mês
-   * ============================================================================ */
-  const {
-    grossRevenue,
-    totalCost,
-    netProfit,
-    totalQuantity,
-    numSales,
-    ticketMedio,
-    profitMargin,
-  } = useMemo(() => {
-    let gross = 0;
-    let cost = 0;
-    let net = 0;
-    let quantity = 0;
-
-    if (financeData && financeData.totals) {
-      gross = Number(financeData.totals.total_revenue || 0);
-      cost = Number(financeData.totals.total_cost || 0);
-      net = Number(financeData.totals.total_profit || 0);
+    if (user && user.role === 'GESTOR') {
+      loadFinancial();
     }
+  }, [month, year, user]);
 
-    if (financeData && Array.isArray(financeData.items)) {
-      quantity = financeData.items.reduce(
-        (acc, item) => acc + Number(item.total_quantity || 0),
-        0
-      );
-    }
-
-    const num = salesOfMonth.length;
-    const ticket = num > 0 ? gross / num : 0;
-    const margin = gross > 0 ? (net / gross) * 100 : 0;
-
-    return {
-      grossRevenue: gross,
-      totalCost: cost,
-      netProfit: net,
-      totalQuantity: quantity,
-      numSales: num,
-      ticketMedio: ticket,
-      profitMargin: margin,
-    };
-  }, [financeData, salesOfMonth]);
-
-  /* ============================================================================
-   * Segurança: apenas GESTOR pode acessar esta tela
-   * ============================================================================ */
-  if (user && user.role && user.role !== 'GESTOR') {
+  if (user && user.role !== 'GESTOR') {
     return (
       <div className="dashboard-container">
         <Header user={user} onLogout={onLogout} />
-        <main className="dashboard-main">
-          <section className="card card-animated card-delay-1">
-            <h2>Financeiro</h2>
-            <p>Apenas gestores têm acesso a esta área.</p>
+        <main className="dashboard-main" style={{ gridTemplateColumns: '1fr' }}>
+          <section className="card">
+            <h2>⛔ Acesso Restrito</h2>
+            <p>Apenas gestores podem visualizar o financeiro.</p>
           </section>
         </main>
       </div>
     );
   }
 
+  const { items, totals } = data;
+
+  // Meses para o select
+  const months = [
+    { value: '1', label: 'Janeiro' }, { value: '2', label: 'Fevereiro' },
+    { value: '3', label: 'Março' }, { value: '4', label: 'Abril' },
+    { value: '5', label: 'Maio' }, { value: '6', label: 'Junho' },
+    { value: '7', label: 'Julho' }, { value: '8', label: 'Agosto' },
+    { value: '9', label: 'Setembro' }, { value: '10', label: 'Outubro' },
+    { value: '11', label: 'Novembro' }, { value: '12', label: 'Dezembro' },
+  ];
+
   return (
     <div className="dashboard-container">
       <Header user={user} onLogout={onLogout} />
 
-      <main className="dashboard-main">
-        {/* ================================================================== */}
-        {/* CARD 1 – Filtros + Resumo Financeiro                               */}
-        {/* ================================================================== */}
+      <main className="dashboard-main" style={{ gridTemplateColumns: '1fr' }}>
+        
+        {/* FILTROS E RESUMO */}
         <section className="card card-animated card-delay-1">
-          <h2>Resumo Financeiro</h2>
-
-          <div
-            style={{
-              marginBottom: 16,
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 8,
-            }}
-          >
+          <h2>💰 Resumo Financeiro</h2>
+          
+          <div className="form-row" style={{ maxWidth: '400px', marginBottom: '20px' }}>
             <label>
-              Mês de referência
-              <input
-                type="month"
-                value={selectedMonth}
-                onChange={(e) => setSelectedMonth(e.target.value)}
+              Mês
+              <select value={month} onChange={(e) => setMonth(e.target.value)}>
+                {months.map((m) => (
+                  <option key={m.value} value={m.value}>{m.label}</option>
+                ))}
+              </select>
+            </label>
+            <label>
+              Ano
+              <input 
+                type="number" 
+                value={year} 
+                onChange={(e) => setYear(e.target.value)} 
               />
             </label>
-
-            {loading && <p className="info-msg">Carregando dados...</p>}
-            {error && <p className="error-msg">{error}</p>}
           </div>
 
-          <ul>
-            <li>
-              <span>Receita bruta</span>
-              <span>
-                <strong>R$ {grossRevenue.toFixed(2)}</strong>
-              </span>
-            </li>
-            <li>
-              <span>Custo estimado</span>
-              <span>
-                <strong>R$ {totalCost.toFixed(2)}</strong>
-              </span>
-            </li>
-            <li>
-              <span>Lucro “líquido” estimado</span>
-              <span>
-                <strong>R$ {netProfit.toFixed(2)}</strong>
-              </span>
-            </li>
-            <li>
-              <span>Margem (%)</span>
-              <span>
-                <strong>{profitMargin.toFixed(1)}%</strong>
-              </span>
-            </li>
-            <li>
-              <span>Nº de vendas (mês)</span>
-              <span>
-                <strong>{numSales}</strong>
-              </span>
-            </li>
-            <li>
-              <span>Quantidade total vendida</span>
-              <span>
-                <strong>{totalQuantity} un.</strong>
-              </span>
-            </li>
-            <li>
-              <span>Ticket médio por venda</span>
-              <span>
-                <strong>R$ {ticketMedio.toFixed(2)}</strong>
-              </span>
-            </li>
-          </ul>
-        </section>
+          {loading && <p className="info-msg">Calculando...</p>}
+          {error && <p className="error-msg">{error}</p>}
 
-        {/* ================================================================== */}
-        {/* CARD 2 – Lista das vendas do mês selecionado                       */}
-        {/* ================================================================== */}
-        <section className="card card-animated card-delay-2">
-          <h2>Vendas no mês selecionado</h2>
+          {!loading && !error && (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '16px', marginBottom: '20px' }}>
+              <div style={{ background: 'rgba(255,255,255,0.03)', padding: '16px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                <small style={{ color: 'var(--text-muted)' }}>Receita Bruta</small>
+                <strong style={{ display: 'block', fontSize: '20px', color: 'var(--accent)' }}>
+                  R$ {Number(totals?.total_revenue || 0).toFixed(2)}
+                </strong>
+              </div>
+              
+              <div style={{ background: 'rgba(255,255,255,0.03)', padding: '16px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                <small style={{ color: 'var(--text-muted)' }}>Custo Produtos</small>
+                <strong style={{ display: 'block', fontSize: '20px', color: '#fff' }}>
+                  R$ {Number(totals?.total_cost || 0).toFixed(2)}
+                </strong>
+              </div>
 
-          {salesOfMonth.length === 0 ? (
-            <p>Nenhuma venda registrada para este mês.</p>
-          ) : (
-            <ul>
-              {salesOfMonth.map((s) => (
-                <li
-                  key={s.id}
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    gap: 12,
-                    flexWrap: 'wrap',
-                  }}
-                >
-                  <span>
-                    <strong>{s.product || s.product_name}</strong> —{' '}
-                    <strong>{s.quantity} un.</strong> —{' '}
-                    <strong>R$ {Number(s.total_price).toFixed(2)}</strong>
-                  </span>
-
-                  <span>
-                    <small>
-                      {new Date(s.created_at).toLocaleString('pt-BR')}
-                    </small>
-                  </span>
-                </li>
-              ))}
-            </ul>
+              <div style={{ background: 'rgba(20, 255, 100, 0.05)', padding: '16px', borderRadius: '12px', border: '1px solid rgba(20, 255, 100, 0.2)' }}>
+                <small style={{ color: 'var(--success)' }}>Lucro Líquido</small>
+                <strong style={{ display: 'block', fontSize: '20px', color: 'var(--success)' }}>
+                  R$ {Number(totals?.total_profit || 0).toFixed(2)}
+                </strong>
+              </div>
+            </div>
           )}
         </section>
+
+        {/* TABELA DETALHADA */}
+        {!loading && !error && items && items.length > 0 && (
+          <section className="card card-animated card-delay-2">
+            <h3>Detalhes por Produto</h3>
+            
+            {/* WRAPPER MÁGICO PARA MOBILE */}
+            <div style={{ overflowX: 'auto', marginTop: '10px' }}>
+              <table className="products-table" style={{ minWidth: '700px' }}>
+                <thead>
+                  <tr>
+                    <th style={{ textAlign: 'left', paddingLeft: '10px' }}>Produto</th>
+                    <th style={{ textAlign: 'center' }}>Qtd. Vendida</th>
+                    <th style={{ textAlign: 'right' }}>Receita</th>
+                    <th style={{ textAlign: 'right' }}>Custo</th>
+                    <th style={{ textAlign: 'right' }}>Lucro</th>
+                    <th style={{ textAlign: 'center' }}>Margem</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {items.map((item) => (
+                    <tr key={item.product_id}>
+                      <td style={{ paddingLeft: '10px', fontWeight: '500' }}>{item.name}</td>
+                      <td style={{ textAlign: 'center' }}>{item.total_quantity}</td>
+                      <td style={{ textAlign: 'right', color: 'var(--accent)' }}>
+                        R$ {Number(item.total_revenue).toFixed(2)}
+                      </td>
+                      <td style={{ textAlign: 'right', opacity: 0.7 }}>
+                        R$ {Number(item.total_cost).toFixed(2)}
+                      </td>
+                      <td style={{ textAlign: 'right', color: 'var(--success)', fontWeight: 'bold' }}>
+                        R$ {Number(item.profit).toFixed(2)}
+                      </td>
+                      <td style={{ textAlign: 'center' }}>
+                        <span style={{ 
+                          fontSize: '11px', 
+                          background: 'rgba(255,255,255,0.1)', 
+                          padding: '2px 6px', 
+                          borderRadius: '4px' 
+                        }}>
+                          {item.margin_percent}%
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        )}
       </main>
     </div>
   );
