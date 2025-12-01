@@ -103,6 +103,8 @@ export default function Sales({ user, onLogout }) {
     setSelectedProductId(String(sale.product_id));
     setQuantity(sale.quantity);
     setMessage('');
+    // Rola a tela para cima suavemente para o formulário
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   /* =========================================================================
@@ -129,44 +131,48 @@ export default function Sales({ user, onLogout }) {
     <div className="dashboard-container">
       <Header user={user} onLogout={onLogout} />
 
-      <main className="sales-main">
+      {/* ALTERAÇÃO: Forçamos 1 coluna para empilhar os cards verticalmente */}
+      <main className="sales-main" style={{ gridTemplateColumns: '1fr' }}>
+        
         {/* ================================================================== */}
-        {/* CARD 1 – FORMULÁRIO DE VENDA                                      */}
+        {/* CARD 1 – FORMULÁRIO DE VENDA (EM CIMA)                             */}
         {/* ================================================================== */}
         <section className="card card-animated card-delay-1">
           <h2>{editingSaleId ? 'Editar Venda' : 'Registrar Nova Venda'}</h2>
 
           <form className="sales-form" onSubmit={handleSubmit}>
-            <label>
-              Produto
-              <select
-                value={selectedProductId}
-                onChange={(e) => setSelectedProductId(e.target.value)}
-                disabled={editingSaleId !== null} // impedir troca do produto ao editar
-              >
-                <option value="">Selecione...</option>
-                {products.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.name} ({p.category || 'Sem categoria'}) — estoque:{' '}
-                    {p.stock_current}
-                  </option>
-                ))}
-              </select>
-            </label>
+            {/* Linha com 2 colunas para Produto e Quantidade ficarem lado a lado */}
+            <div className="form-row" style={{ marginBottom: '0' }}>
+              <label style={{ flex: 3 }}>
+                Produto
+                <select
+                  value={selectedProductId}
+                  onChange={(e) => setSelectedProductId(e.target.value)}
+                  disabled={editingSaleId !== null} 
+                >
+                  <option value="">Selecione...</option>
+                  {products.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.name} ({p.category || 'Geral'}) — Estoque: {p.stock_current}
+                    </option>
+                  ))}
+                </select>
+              </label>
 
-            <label>
-              Quantidade
-              <input
-                type="number"
-                min="1"
-                value={quantity}
-                onChange={(e) => setQuantity(e.target.value)}
-              />
-            </label>
+              <label style={{ flex: 1 }}>
+                Qtd.
+                <input
+                  type="number"
+                  min="1"
+                  value={quantity}
+                  onChange={(e) => setQuantity(e.target.value)}
+                />
+              </label>
+            </div>
 
-            {message && <p className="info-msg">{message}</p>}
+            {message && <p className="info-msg" style={{ marginTop: '10px' }}>{message}</p>}
 
-            <div className="form-row">
+            <div className="form-row" style={{ marginTop: '10px' }}>
               <button type="submit" style={{ flex: 1 }}>
                 {editingSaleId ? 'Salvar Alterações' : 'Registrar Venda'}
               </button>
@@ -175,9 +181,10 @@ export default function Sales({ user, onLogout }) {
                 <button
                   type="button"
                   onClick={handleCancelEdit}
+                  className="btn-secondary"
                   style={{ flex: 1 }}
                 >
-                  Cancelar Edição
+                  Cancelar
                 </button>
               )}
             </div>
@@ -185,7 +192,7 @@ export default function Sales({ user, onLogout }) {
         </section>
 
         {/* ================================================================== */}
-        {/* CARD 2 – LISTA DE ÚLTIMAS VENDAS                                  */}
+        {/* CARD 2 – LISTA DE ÚLTIMAS VENDAS (EMBAIXO)                         */}
         {/* ================================================================== */}
         <section className="card card-animated card-delay-2">
           <h2>Últimas Vendas</h2>
@@ -193,53 +200,52 @@ export default function Sales({ user, onLogout }) {
           {lastSales.length === 0 ? (
             <p>Nenhuma venda registrada ainda.</p>
           ) : (
-            <ul>
+            <ul style={{ padding: 0 }}>
               {lastSales.map((sale) => (
                 <li
                   key={sale.id}
                   style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: 8,
+                    display: 'grid',
+                    gridTemplateColumns: '2fr 1fr 1fr auto', // Grid para alinhar colunas
+                    alignItems: 'center',
+                    gap: '16px',
+                    padding: '16px 0',
+                    borderBottom: '1px solid rgba(255,255,255,0.05)'
                   }}
                 >
-                  {/* Linha principal: produto + qtd + valor */}
-                  <div
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      gap: 12,
-                      flexWrap: 'wrap',
-                    }}
-                  >
-                    <span>
-                      <strong>{sale.product || sale.product_name}</strong> —{' '}
-                      <strong>{sale.quantity} un.</strong>
-                    </span>
+                  {/* Coluna 1: Nome do Produto e Data */}
+                  <div style={{ display: 'flex', flexDirection: 'column' }}>
+                    <strong style={{ fontSize: '15px', color: 'var(--text-main)' }}>
+                      {sale.product || sale.product_name}
+                    </strong>
+                    <small style={{ color: 'var(--text-muted)', fontSize: '11px' }}>
+                      {new Date(sale.created_at).toLocaleString('pt-BR')}
+                    </small>
+                  </div>
 
-                    <span>
-                      <strong>
-                        R$ {Number(sale.total_price || 0).toFixed(2)}
-                      </strong>
-                      <br />
-                      <small>
-                        {new Date(sale.created_at).toLocaleString('pt-BR')}
-                      </small>
+                  {/* Coluna 2: Quantidade */}
+                  <div style={{ textAlign: 'center' }}>
+                    <span style={{ 
+                      background: 'rgba(255,255,255,0.05)', 
+                      padding: '4px 10px', 
+                      borderRadius: '12px',
+                      fontSize: '13px'
+                    }}>
+                      {sale.quantity} un.
                     </span>
                   </div>
 
-                  {/* Botões de ação alinhados à direita */}
-                  <div
-                    style={{
-                      display: 'flex',
-                      gap: 8,
-                      justifyContent: 'flex-end',
-                      marginTop: 4,
-                    }}
-                  >
+                  {/* Coluna 3: Valor Total */}
+                  <div style={{ textAlign: 'right', fontWeight: 'bold', color: 'var(--accent)' }}>
+                    R$ {Number(sale.total_price || 0).toFixed(2)}
+                  </div>
+
+                  {/* Coluna 4: Botões de Ação */}
+                  <div style={{ display: 'flex', gap: '8px' }}>
                     <button
                       type="button"
                       onClick={() => handleEditClick(sale)}
+                      title="Editar"
                     >
                       Editar
                     </button>
@@ -247,6 +253,7 @@ export default function Sales({ user, onLogout }) {
                     <button
                       type="button"
                       onClick={() => setSaleToDelete(sale)}
+                      title="Excluir"
                     >
                       Excluir
                     </button>
@@ -259,7 +266,7 @@ export default function Sales({ user, onLogout }) {
       </main>
 
       {/* ================================================================== */}
-      {/* MODAL DE EXCLUSÃO                                                 */}
+      {/* MODAL DE EXCLUSÃO                                                  */}
       {/* ================================================================== */}
       {saleToDelete && (
         <DeleteSaleModal
