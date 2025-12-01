@@ -2,16 +2,15 @@
 
 import { useState } from 'react';
 import api from '../services/api';
+// 1. Import do Footer
+import Footer from '../components/Footer';
 
 export default function Login({ onLoginSuccess }) {
-  const [email, setEmail] = useState('admin@luna.com'); // facilita testes
+  const [email, setEmail] = useState('admin@luna.com');
   const [password, setPassword] = useState('123456');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  /* ============================================================================
-   * SUBMIT DO LOGIN
-   * ============================================================================ */
   async function handleSubmit(e) {
     e.preventDefault();
     setError('');
@@ -19,7 +18,6 @@ export default function Login({ onLoginSuccess }) {
 
     try {
       const res = await api.post('/auth/login', { email, password });
-
       const { token, user } = res.data;
 
       localStorage.setItem('appgestor_token', token);
@@ -28,11 +26,7 @@ export default function Login({ onLoginSuccess }) {
       onLoginSuccess({ token, user });
     } catch (err) {
       console.error('Erro login:', err);
-
-      const msg =
-        err.response?.data?.error ||
-        'E-mail ou senha inválidos. Tente novamente.';
-
+      const msg = err.response?.data?.error || 'E-mail ou senha inválidos.';
       setError(msg);
     } finally {
       setLoading(false);
@@ -41,7 +35,7 @@ export default function Login({ onLoginSuccess }) {
 
   return (
     <div className="login-page">
-      {/* Orbe decorativo de fundo (efeito Apple) */}
+      {/* Orbes de fundo */}
       <div className="login-orb login-orb-left" />
       <div className="login-orb login-orb-right" />
 
@@ -51,7 +45,6 @@ export default function Login({ onLoginSuccess }) {
             <span className="login-logo-dot" />
             <span className="login-logo-text">A Casa da Luna</span>
           </div>
-
           <h1>AppGestor</h1>
           <h2>Painel de gestão do wine bar</h2>
         </div>
@@ -93,9 +86,13 @@ export default function Login({ onLoginSuccess }) {
         </form>
 
         <p className="hint">
-          Dica para testes: <br />
-          <strong>admin@luna.com</strong> — <strong>123456</strong>
+          Dica: <strong>admin@luna.com</strong> — <strong>123456</strong>
         </p>
+      </div>
+
+      {/* 2. FOOTER FIXO NO RODAPÉ */}
+      <div style={{ position: 'absolute', bottom: 0, width: '100%', zIndex: 10 }}>
+        <Footer />
       </div>
     </div>
   );
