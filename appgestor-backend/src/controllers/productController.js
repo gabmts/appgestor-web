@@ -32,7 +32,14 @@ module.exports = {
         });
       }
 
-      const [id] = await db('products').insert({
+      // Verifica se já existe um produto com esse nome exato
+      const existing = await db('products').where({ name }).first();
+      if (existing) {
+        return res.status(400).json({ error: 'Já existe um produto com este nome.' });
+      }
+
+      // 1. INSERE O PRODUTO (Sem depender do retorno do ID)
+      await db('products').insert({
         name,
         category,
         purchase_price,
@@ -41,7 +48,8 @@ module.exports = {
         stock_min: stock_min || 0,
       });
 
-      const product = await db('products').where({ id }).first();
+      // 2. BUSCA O PRODUTO RECÉM-CRIADO PELO NOME (Garante o ID correto)
+      const product = await db('products').where({ name }).first();
 
       return res.status(201).json({
         message: 'Produto criado com sucesso',
