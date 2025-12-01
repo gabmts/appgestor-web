@@ -28,13 +28,14 @@ export default function Stock({ user, onLogout }) {
     loadLowStock();
   }, []);
 
-  // Estilo forçado para garantir que o cabeçalho não quebre
-  const headerStyle = {
-    paddingBottom: '16px',       // Espaço embaixo do texto
-    verticalAlign: 'bottom',     // Alinha o texto na parte de baixo
-    whiteSpace: 'nowrap',        // PROIBIDO quebrar linha (resolve a sobreposição)
-    color: 'var(--text-muted)',  // Mantém a cor padrão
-    height: '50px'               // Altura mínima garantida
+  // Estilo específico para garantir que os títulos não se atropelme
+  const thStyle = {
+    paddingBottom: '12px',       
+    verticalAlign: 'bottom',     
+    color: 'var(--text-muted)',  
+    fontSize: '11px',
+    textTransform: 'uppercase',
+    letterSpacing: '0.08em'
   };
 
   return (
@@ -59,12 +60,22 @@ export default function Stock({ user, onLogout }) {
             <table className="products-table">
               <thead>
                 <tr>
-                  {/* Aplicando o estilo forçado em cada coluna */}
-                  <th style={headerStyle}>Produto</th>
-                  <th style={headerStyle}>Categoria</th>
-                  <th style={headerStyle}>Estoque atual</th>
-                  <th style={headerStyle}>Mínimo</th>
-                  <th style={headerStyle}>Sugestão</th>
+                  {/* Definindo larguras para evitar colisão */}
+                  <th style={{ ...thStyle, width: '35%' }}>Produto</th>
+                  <th style={{ ...thStyle, width: '20%' }}>Categoria</th>
+                  
+                  {/* Forçando quebra de linha manual para ficar bonito */}
+                  <th style={{ ...thStyle, width: '15%', textAlign: 'right' }}>
+                    Estoque<br/>Atual
+                  </th>
+                  
+                  <th style={{ ...thStyle, width: '10%', textAlign: 'right' }}>
+                    Mínimo
+                  </th>
+                  
+                  <th style={{ ...thStyle, width: '20%', textAlign: 'center' }}>
+                    Sugestão
+                  </th>
                 </tr>
               </thead>
 
@@ -83,16 +94,24 @@ export default function Stock({ user, onLogout }) {
                     <tr key={p.id}>
                       <td>{p.name}</td>
                       <td>{p.category || '-'}</td>
-                      <td>
+                      
+                      <td style={{ textAlign: 'right' }}>
                         <strong>{current}</strong>{' '}
-                        <small style={{ opacity: 0.7 }}>({statusLabel})</small>
+                        <br/>
+                        <small style={{ opacity: 0.7, fontSize: '10px' }}>({statusLabel})</small>
                       </td>
-                      <td><strong>{min}</strong></td>
-                      <td>
+                      
+                      <td style={{ textAlign: 'right' }}>
+                        <strong>{min}</strong>
+                      </td>
+                      
+                      <td style={{ textAlign: 'center' }}>
                         {suggested > 0 ? (
-                          <span>Comprar pelo menos <strong>{suggested} un.</strong></span>
+                          <span>
+                            Comprar +<strong>{suggested}</strong>
+                          </span>
                         ) : (
-                          <span>Sem necessidade imediata</span>
+                          <span>-</span>
                         )}
                       </td>
                     </tr>
